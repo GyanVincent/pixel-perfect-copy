@@ -11,7 +11,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 interface DashboardData {
-  profile: { full_name: string; streak_days: number; total_questions_answered: number } | null;
+  profile: { full_name: string; streak_days: number | null; total_questions_answered: number | null } | null;
   recentSessions: Array<{
     id: string;
     total_questions: number;
