@@ -1,11 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, BookOpen, Play, BarChart3, User, LogOut, GraduationCap } from "lucide-react";
+import { LayoutDashboard, BookOpen, Play, BarChart3, User, LogOut, GraduationCap, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/subjects", label: "Subjects", icon: BookOpen },
   { to: "/practice", label: "Practice", icon: Play },
+  { to: "/tutor", label: "AI Tutor", icon: Sparkles },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;

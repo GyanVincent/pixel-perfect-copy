@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TutorRouteImport } from './routes/tutor'
 import { Route as SubjectsRouteImport } from './routes/subjects'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -19,7 +20,13 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiAiChatRouteImport } from './routes/api/ai-chat'
 
+const TutorRoute = TutorRouteImport.update({
+  id: '/tutor',
+  path: '/tutor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SubjectsRoute = SubjectsRouteImport.update({
   id: '/subjects',
   path: '/subjects',
@@ -70,6 +77,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiChatRoute = ApiAiChatRouteImport.update({
+  id: '/api/ai-chat',
+  path: '/api/ai-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +94,8 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/subjects': typeof SubjectsRoute
+  '/tutor': typeof TutorRoute
+  '/api/ai-chat': typeof ApiAiChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +108,8 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/subjects': typeof SubjectsRoute
+  '/tutor': typeof TutorRoute
+  '/api/ai-chat': typeof ApiAiChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +123,8 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/subjects': typeof SubjectsRoute
+  '/tutor': typeof TutorRoute
+  '/api/ai-chat': typeof ApiAiChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +139,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/subjects'
+    | '/tutor'
+    | '/api/ai-chat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +153,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/subjects'
+    | '/tutor'
+    | '/api/ai-chat'
   id:
     | '__root__'
     | '/'
@@ -145,6 +167,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/subjects'
+    | '/tutor'
+    | '/api/ai-chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,10 +182,19 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   SubjectsRoute: typeof SubjectsRoute
+  TutorRoute: typeof TutorRoute
+  ApiAiChatRoute: typeof ApiAiChatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tutor': {
+      id: '/tutor'
+      path: '/tutor'
+      fullPath: '/tutor'
+      preLoaderRoute: typeof TutorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/subjects': {
       id: '/subjects'
       path: '/subjects'
@@ -232,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai-chat': {
+      id: '/api/ai-chat'
+      path: '/api/ai-chat'
+      fullPath: '/api/ai-chat'
+      preLoaderRoute: typeof ApiAiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -246,16 +286,9 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   SubjectsRoute: SubjectsRoute,
+  TutorRoute: TutorRoute,
+  ApiAiChatRoute: ApiAiChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
