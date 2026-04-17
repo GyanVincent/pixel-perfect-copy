@@ -257,7 +257,9 @@ export type Database = {
           description: string | null
           icon: string
           id: string
+          level: string
           name: string
+          semester: number
           total_topics: number | null
         }
         Insert: {
@@ -267,7 +269,9 @@ export type Database = {
           description?: string | null
           icon?: string
           id?: string
+          level?: string
           name: string
+          semester?: number
           total_topics?: number | null
         }
         Update: {
@@ -277,7 +281,9 @@ export type Database = {
           description?: string | null
           icon?: string
           id?: string
+          level?: string
           name?: string
+          semester?: number
           total_topics?: number | null
         }
         Relationships: []
