@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BookOpen, ChevronRight, Monitor, Film, Code, Briefcase } from "lucide-react";
 
 export const Route = createFileRoute("/subjects")({
@@ -24,13 +24,18 @@ interface Subject {
   description: string | null;
   color: string;
   icon: string;
+  level: string;
+  semester: number;
   topics: Array<{ id: string; name: string }>;
 }
+
+type SemesterKey = `${string}-${number}`;
 
 function SubjectsPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [activeKey, setActiveKey] = useState<SemesterKey>("L200-2");
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) navigate({ to: "/login" });
@@ -40,12 +45,32 @@ function SubjectsPage() {
     async function load() {
       const { data } = await supabase
         .from("subjects")
-        .select("id, name, code, description, color, icon, topics(id, name)")
+        .select("id, name, code, description, color, icon, level, semester, topics(id, name)")
+        .order("level")
+        .order("semester")
         .order("name");
       setSubjects((data || []) as Subject[]);
     }
     load();
   }, []);
+
+  const semesterTabs = useMemo(() => {
+    const groups = new Map<SemesterKey, { level: string; semester: number; count: number }>();
+    for (const s of subjects) {
+      const key = `${s.level}-${s.semester}` as SemesterKey;
+      const existing = groups.get(key);
+      if (existing) existing.count++;
+      else groups.set(key, { level: s.level, semester: s.semester, count: 1 });
+    }
+    return Array.from(groups.entries())
+      .map(([key, v]) => ({ key, ...v }))
+      .sort((a, b) => (a.level === b.level ? a.semester - b.semester : a.level.localeCompare(b.level)));
+  }, [subjects]);
+
+  const filtered = useMemo(
+    () => subjects.filter((s) => `${s.level}-${s.semester}` === activeKey),
+    [subjects, activeKey]
+  );
 
   if (isLoading || !isAuthenticated) {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
@@ -54,19 +79,41 @@ function SubjectsPage() {
   return (
     <AppLayout>
       <div className="max-w-5xl">
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="font-display text-3xl font-bold">Subjects</h1>
-          <p className="mt-1 text-muted-foreground">Browse your L200 second semester courses</p>
+          <p className="mt-1 text-muted-foreground">Browse your courses by level and semester</p>
         </div>
 
-        {subjects.length === 0 ? (
+        {semesterTabs.length > 0 && (
+          <div className="mb-8 flex flex-wrap gap-2">
+            {semesterTabs.map((tab) => {
+              const isActive = tab.key === activeKey;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveKey(tab.key)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/70"
+                  }`}
+                >
+                  {tab.level} · Semester {tab.semester}
+                  <span className="ml-2 text-xs opacity-70">({tab.count})</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {filtered.length === 0 ? (
           <div className="stat-card text-center py-12 text-muted-foreground">
             <BookOpen className="h-10 w-10 mx-auto mb-3 opacity-50" />
-            <p>No subjects available yet. They'll appear once seed data is loaded.</p>
+            <p>No subjects available in this semester yet.</p>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
-            {subjects.map((subject) => {
+            {filtered.map((subject) => {
               const Icon = iconMap[subject.icon] || BookOpen;
               return (
                 <div key={subject.id} className="stat-card">
