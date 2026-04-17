@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export const Route = createFileRoute("/practice")({
   validateSearch: (search: Record<string, unknown>) => ({
     subjectId: (search.subjectId as string) || undefined,
+    groupId: (search.groupId as string) || undefined,
   }),
   component: PracticePage,
 });
@@ -33,7 +34,7 @@ type PracticeState = "setup" | "active" | "review" | "results";
 function PracticePage() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
-  const { subjectId } = Route.useSearch();
+  const { subjectId, groupId } = Route.useSearch();
 
   const [state, setState] = useState<PracticeState>("setup");
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -72,7 +73,7 @@ function PracticePage() {
 
     const { data: session } = await supabase
       .from("practice_sessions")
-      .insert({ user_id: user.id, subject_id: selectedSubject, total_questions: shuffled.length })
+      .insert({ user_id: user.id, subject_id: selectedSubject, group_id: groupId || null, total_questions: shuffled.length })
       .select("id")
       .single();
 
@@ -81,7 +82,7 @@ function PracticePage() {
     setAnswers([]);
     setSelectedAnswer(null);
     setState("active");
-  }, [user, selectedSubject, questionCount]);
+  }, [user, selectedSubject, questionCount, groupId]);
 
   const submitAnswer = useCallback(async () => {
     if (selectedAnswer === null || !user) return;
