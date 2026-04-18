@@ -19,26 +19,26 @@ function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
+      <nav className="flex items-center justify-between px-4 sm:px-6 py-4 max-w-6xl mx-auto">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary">
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="font-display text-xl font-bold">SmartPrep</span>
+          <span className="font-display text-lg sm:text-xl font-bold">SmartPrep</span>
         </div>
         {!isLoading && (
           <Link
             to={isAuthenticated ? "/dashboard" : "/login"}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90"
           >
-            {isAuthenticated ? "Go to Dashboard" : "Get Started"}
+            {isAuthenticated ? "Dashboard" : "Get Started"}
             <ArrowRight className="h-4 w-4" />
           </Link>
         )}
       </nav>
 
       {/* Hero */}
-      <section className="px-6 pt-20 pb-24 max-w-4xl mx-auto text-center">
+      <section className="px-4 sm:px-6 pt-12 sm:pt-20 pb-16 sm:pb-24 max-w-4xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
