@@ -249,6 +249,64 @@ function GroupDetailPage() {
     await supabase.from("study_group_resources").delete().eq("id", id);
   };
 
+  const removeMember = async (memberId: string, name: string) => {
+    if (!confirm(`Remove ${name} from this group?`)) return;
+    const { error } = await supabase
+      .from("study_group_members")
+      .delete()
+      .eq("group_id", groupId)
+      .eq("user_id", memberId);
+    if (error) {
+      console.error("[group] remove member error", error);
+      alert("Could not remove member.");
+      return;
+    }
+    setMembers((prev) => prev.filter((m) => m.user_id !== memberId));
+  };
+
+  const transferOwnership = async (newOwnerId: string, name: string) => {
+    if (!group || !user) return;
+    if (!confirm(`Transfer ownership to ${name}? You will become a regular member.`)) return;
+
+    // 1. Update study_groups.owner_id
+    const { error: gErr } = await supabase
+      .from("study_groups")
+      .update({ owner_id: newOwnerId })
+      .eq("id", groupId);
+    if (gErr) {
+      console.error("[group] transfer owner_id error", gErr);
+      alert("Could not transfer ownership.");
+      return;
+    }
+
+    // 2. Promote new owner role
+    const { error: pErr } = await supabase
+      .from("study_group_members")
+      .update({ role: "owner" })
+      .eq("group_id", groupId)
+      .eq("user_id", newOwnerId);
+    if (pErr) console.error("[group] promote role error", pErr);
+
+    // 3. Demote previous owner to member
+    const { error: dErr } = await supabase
+      .from("study_group_members")
+      .update({ role: "member" })
+      .eq("group_id", groupId)
+      .eq("user_id", user.id);
+    if (dErr) console.error("[group] demote role error", dErr);
+
+    setGroup({ ...group, owner_id: newOwnerId });
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.user_id === newOwnerId
+          ? { ...m, role: "owner" }
+          : m.user_id === user.id
+          ? { ...m, role: "member" }
+          : m
+      )
+    );
+  };
+
   const copyInviteCode = () => {
     if (!group) return;
     navigator.clipboard.writeText(group.invite_code);
