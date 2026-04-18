@@ -262,7 +262,11 @@ function GroupDetailPage() {
   };
 
   if (isLoading || !isAuthenticated || loading) {
-    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center py-20 text-muted-foreground">Loading group...</div>
+      </AppLayout>
+    );
   }
 
   if (!group) {
