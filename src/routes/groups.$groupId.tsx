@@ -568,18 +568,41 @@ function GroupDetailPage() {
         {tab === "members" && (
           <div className="stat-card">
             <div className="space-y-2">
-              {members.map((m) => (
-                <div key={m.user_id} className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-muted/30">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold">
-                    {(m.full_name || "A").charAt(0).toUpperCase()}
+              {members.map((m) => {
+                const isMe = m.user_id === user?.id;
+                const isMemberOwner = m.user_id === group.owner_id;
+                const canManage = isOwner && !isMemberOwner;
+                return (
+                  <div key={m.user_id} className="flex flex-wrap items-center gap-3 rounded-xl px-3 py-2 hover:bg-muted/30">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold">
+                      {(m.full_name || "A").charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-[150px]">
+                      <p className="font-medium truncate">{m.full_name}{isMe && " (you)"}</p>
+                      <p className="text-xs text-muted-foreground">Joined {new Date(m.joined_at).toLocaleDateString()}</p>
+                    </div>
+                    {isMemberOwner && (
+                      <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">Owner</span>
+                    )}
+                    {canManage && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => transferOwnership(m.user_id, m.full_name || "this member")}
+                          className="text-xs rounded-lg border border-border px-2.5 py-1 hover:bg-muted"
+                        >
+                          Make owner
+                        </button>
+                        <button
+                          onClick={() => removeMember(m.user_id, m.full_name || "this member")}
+                          className="text-xs rounded-lg border border-destructive/30 text-destructive px-2.5 py-1 hover:bg-destructive/10"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{m.full_name}{m.user_id === user?.id && " (you)"}</p>
-                    <p className="text-xs text-muted-foreground">Joined {new Date(m.joined_at).toLocaleDateString()}</p>
-                  </div>
-                  {m.role === "owner" && <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">Owner</span>}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
