@@ -329,8 +329,8 @@ function GroupDetailPage() {
         </div>
 
         {tab === "chat" && (
-          <div className="stat-card flex flex-col" style={{ height: "60vh", minHeight: 400 }}>
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+          <div className="stat-card flex flex-col h-[55vh] md:h-[60vh] md:min-h-[400px]">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 min-h-0">
               {messages.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">No messages yet. Say hi 👋</p>
               ) : (
