@@ -29,7 +29,11 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "theme-color", content: "#ffffff" },
       { title: "SmartPrep — Exam Preparation Platform" },
       { name: "description", content: "Intelligent examination preparation platform for university students with adaptive practice, spaced repetition, and analytics." },
       { property: "og:title", content: "SmartPrep — Exam Preparation Platform" },

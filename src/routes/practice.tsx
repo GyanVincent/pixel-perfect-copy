@@ -163,12 +163,12 @@ function PracticePage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2">Number of Questions</label>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     {[5, 10, 15, 20].map((n) => (
                       <button
                         key={n}
                         onClick={() => setQuestionCount(n)}
-                        className={`rounded-xl px-4 py-2 text-sm font-medium transition-all ${
+                        className={`rounded-xl px-2 py-2 text-sm font-medium transition-all ${
                           questionCount === n
                             ? "gradient-primary text-primary-foreground"
                             : "border border-border hover:bg-muted"

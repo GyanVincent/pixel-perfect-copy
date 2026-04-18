@@ -17,7 +17,7 @@ export function AppSidebar() {
   const { logout, user } = useAuth();
 
   return (
-    <aside className="fixed left-0 top-0 z-30 flex h-screen w-64 flex-col border-r border-border bg-card">
+    <aside className="hidden md:flex fixed left-0 top-0 z-30 h-screen w-64 flex-col border-r border-border bg-card">
       <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary">
           <GraduationCap className="h-5 w-5 text-primary-foreground" />
