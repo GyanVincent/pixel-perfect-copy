@@ -85,44 +85,57 @@ function GroupDetailPage() {
 
     const load = async () => {
       setLoading(true);
-      const { data: g } = await supabase
-        .from("study_groups")
-        .select("id, name, description, invite_code, owner_id, subject_id, subjects(id, name, code)")
-        .eq("id", groupId)
-        .maybeSingle();
+      try {
+        const { data: g, error: gErr } = await supabase
+          .from("study_groups")
+          .select("id, name, description, invite_code, owner_id, subject_id, subjects(id, name, code)")
+          .eq("id", groupId)
+          .maybeSingle();
 
-      if (!g || cancelled) {
-        setLoading(false);
-        return;
+        if (cancelled) return;
+        if (gErr) console.error("[group] load group error", gErr);
+        if (!g) {
+          setGroup(null);
+          setLoading(false);
+          return;
+        }
+        setGroup(g as GroupInfo);
+
+        const [mems, msgs, res] = await Promise.all([
+          supabase.from("study_group_members").select("user_id, role, joined_at").eq("group_id", groupId),
+          supabase.from("study_group_messages").select("id, user_id, content, created_at").eq("group_id", groupId).order("created_at", { ascending: true }).limit(200),
+          supabase.from("study_group_resources").select("id, user_id, title, url, notes, created_at").eq("group_id", groupId).order("created_at", { ascending: false }),
+        ]);
+
+        if (cancelled) return;
+        if (mems.error) console.error("[group] members error", mems.error);
+        if (msgs.error) console.error("[group] messages error", msgs.error);
+        if (res.error) console.error("[group] resources error", res.error);
+
+        const userIds = Array.from(new Set([
+          ...(mems.data || []).map((m) => m.user_id),
+          ...(msgs.data || []).map((m) => m.user_id),
+          ...(res.data || []).map((r) => r.user_id),
+        ]));
+
+        const profileMap = new Map<string, string>();
+        if (userIds.length > 0) {
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("user_id, full_name")
+            .in("user_id", userIds);
+          (profs || []).forEach((p) => profileMap.set(p.user_id, p.full_name || "Anonymous"));
+        }
+
+        if (cancelled) return;
+        setMembers((mems.data || []).map((m) => ({ ...m, full_name: profileMap.get(m.user_id) || "Anonymous" })));
+        setMessages((msgs.data || []).map((m) => ({ ...m, author_name: profileMap.get(m.user_id) || "Anonymous" })));
+        setResources((res.data || []).map((r) => ({ ...r, author_name: profileMap.get(r.user_id) || "Anonymous" })));
+      } catch (err) {
+        console.error("[group] unexpected load error", err);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setGroup(g as GroupInfo);
-
-      const [mems, msgs, res] = await Promise.all([
-        supabase.from("study_group_members").select("user_id, role, joined_at").eq("group_id", groupId),
-        supabase.from("study_group_messages").select("id, user_id, content, created_at").eq("group_id", groupId).order("created_at", { ascending: true }).limit(200),
-        supabase.from("study_group_resources").select("id, user_id, title, url, notes, created_at").eq("group_id", groupId).order("created_at", { ascending: false }),
-      ]);
-
-      const userIds = Array.from(new Set([
-        ...(mems.data || []).map((m) => m.user_id),
-        ...(msgs.data || []).map((m) => m.user_id),
-        ...(res.data || []).map((r) => r.user_id),
-      ]));
-
-      const profileMap = new Map<string, string>();
-      if (userIds.length > 0) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("user_id, full_name")
-          .in("user_id", userIds);
-        (profs || []).forEach((p) => profileMap.set(p.user_id, p.full_name || "Anonymous"));
-      }
-
-      if (cancelled) return;
-      setMembers((mems.data || []).map((m) => ({ ...m, full_name: profileMap.get(m.user_id) || "Anonymous" })));
-      setMessages((msgs.data || []).map((m) => ({ ...m, author_name: profileMap.get(m.user_id) || "Anonymous" })));
-      setResources((res.data || []).map((r) => ({ ...r, author_name: profileMap.get(r.user_id) || "Anonymous" })));
-      setLoading(false);
     };
 
     load();
@@ -249,7 +262,11 @@ function GroupDetailPage() {
   };
 
   if (isLoading || !isAuthenticated || loading) {
-    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center py-20 text-muted-foreground">Loading group...</div>
+      </AppLayout>
+    );
   }
 
   if (!group) {
