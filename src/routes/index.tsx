@@ -48,25 +48,25 @@ function LandingPage() {
             <Zap className="h-3.5 w-3.5" />
             Built for L200 Students
           </div>
-          <h1 className="font-display text-5xl sm:text-6xl font-bold leading-tight tracking-tight">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tight">
             Ace Your Exams with{" "}
             <span className="gradient-text">Intelligent</span>{" "}
             Preparation
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-5 sm:mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             SmartPrep combines adaptive practice questions, spaced repetition, and performance analytics to help you study smarter — not harder.
           </p>
-          <div className="mt-10 flex items-center justify-center gap-4">
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
             <Link
               to={isAuthenticated ? "/dashboard" : "/signup"}
-              className="inline-flex items-center gap-2 rounded-xl gradient-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg transition-all hover:opacity-90"
+              className="inline-flex items-center justify-center gap-2 rounded-xl gradient-primary px-6 sm:px-7 py-3 sm:py-3.5 text-sm font-semibold text-primary-foreground shadow-lg transition-all hover:opacity-90"
             >
               Start Studying Free
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-7 py-3.5 text-sm font-semibold text-foreground transition-all hover:bg-muted"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 sm:px-7 py-3 sm:py-3.5 text-sm font-semibold text-foreground transition-all hover:bg-muted"
             >
               Sign In
             </Link>

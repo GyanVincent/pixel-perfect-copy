@@ -73,16 +73,16 @@ function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-5xl">
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">
-            Welcome back, {data.profile?.full_name || "Student"} 👋
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">
+            Welcome back, {data.profile?.full_name?.split(" ")[0] || "Student"} 👋
           </h1>
-          <p className="mt-1 text-muted-foreground">Here's your study overview</p>
+          <p className="mt-1 text-sm sm:text-base text-muted-foreground">Here's your study overview</p>
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
           {stats.map((s) => (
             <div key={s.label} className="stat-card">
               <div className="flex items-center justify-between mb-3">
