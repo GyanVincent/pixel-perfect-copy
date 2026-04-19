@@ -74,9 +74,9 @@ function GroupsPage() {
   };
 
   useEffect(() => {
-    if (user) loadGroups();
+    if (user?.id) loadGroups();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user?.id]);
 
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
