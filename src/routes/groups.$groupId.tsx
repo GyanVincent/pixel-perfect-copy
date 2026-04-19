@@ -265,35 +265,56 @@ function GroupDetailPage() {
   };
 
   const transferOwnership = async (newOwnerId: string, name: string) => {
-    if (!group || !user) return;
+    if (!group || !user || newOwnerId === user.id) return;
     if (!confirm(`Transfer ownership to ${name}? You will become a regular member.`)) return;
 
-    // 1. Update study_groups.owner_id
-    const { error: gErr } = await supabase
-      .from("study_groups")
-      .update({ owner_id: newOwnerId })
-      .eq("id", groupId);
-    if (gErr) {
-      console.error("[group] transfer owner_id error", gErr);
-      alert("Could not transfer ownership.");
-      return;
-    }
-
-    // 2. Promote new owner role
     const { error: pErr } = await supabase
       .from("study_group_members")
       .update({ role: "owner" })
       .eq("group_id", groupId)
       .eq("user_id", newOwnerId);
-    if (pErr) console.error("[group] promote role error", pErr);
+    if (pErr) {
+      console.error("[group] promote role error", pErr);
+      alert("Could not transfer ownership.");
+      return;
+    }
 
-    // 3. Demote previous owner to member
     const { error: dErr } = await supabase
       .from("study_group_members")
       .update({ role: "member" })
       .eq("group_id", groupId)
       .eq("user_id", user.id);
-    if (dErr) console.error("[group] demote role error", dErr);
+    if (dErr) {
+      console.error("[group] demote role error", dErr);
+      await supabase
+        .from("study_group_members")
+        .update({ role: "member" })
+        .eq("group_id", groupId)
+        .eq("user_id", newOwnerId);
+      alert("Could not transfer ownership.");
+      return;
+    }
+
+    const { error: gErr } = await supabase
+      .from("study_groups")
+      .update({ owner_id: newOwnerId })
+      .eq("id", groupId)
+      .eq("owner_id", user.id);
+    if (gErr) {
+      console.error("[group] transfer owner_id error", gErr);
+      await supabase
+        .from("study_group_members")
+        .update({ role: "member" })
+        .eq("group_id", groupId)
+        .eq("user_id", newOwnerId);
+      await supabase
+        .from("study_group_members")
+        .update({ role: "owner" })
+        .eq("group_id", groupId)
+        .eq("user_id", user.id);
+      alert("Could not transfer ownership.");
+      return;
+    }
 
     setGroup({ ...group, owner_id: newOwnerId });
     setMembers((prev) =>
@@ -301,8 +322,8 @@ function GroupDetailPage() {
         m.user_id === newOwnerId
           ? { ...m, role: "owner" }
           : m.user_id === user.id
-          ? { ...m, role: "member" }
-          : m
+            ? { ...m, role: "member" }
+            : m
       )
     );
   };
