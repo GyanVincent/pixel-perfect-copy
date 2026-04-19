@@ -404,7 +404,7 @@ function GroupDetailPage() {
           </div>
         </div>
 
-        <div className="flex gap-1 mb-6 border-b border-border">
+        <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none">
           {([
             { key: "chat", label: "Chat", icon: MessageSquare },
             { key: "resources", label: "Resources", icon: BookMarked },
@@ -414,7 +414,7 @@ function GroupDetailPage() {
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              className={`flex shrink-0 items-center gap-2 px-3 md:px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
                 tab === key ? "border-accent text-accent" : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -425,7 +425,7 @@ function GroupDetailPage() {
         </div>
 
         {tab === "chat" && (
-          <div className="stat-card flex flex-col h-[55vh] md:h-[60vh] md:min-h-[400px]">
+          <div className="stat-card flex flex-col h-[calc(100vh-22rem)] min-h-[360px] md:h-[60vh] md:min-h-[400px] p-3 md:p-5">
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 min-h-0">
               {messages.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">No messages yet. Say hi 👋</p>
@@ -433,18 +433,18 @@ function GroupDetailPage() {
                 messages.map((m) => {
                   const isMe = m.user_id === user?.id;
                   return (
-                    <div key={m.id} className={`flex gap-3 ${isMe ? "flex-row-reverse" : ""}`}>
+                    <div key={m.id} className={`flex gap-2 md:gap-3 ${isMe ? "flex-row-reverse" : ""}`}>
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent text-xs font-semibold">
                         {(m.author_name || "A").charAt(0).toUpperCase()}
                       </div>
-                      <div className={`max-w-[70%] ${isMe ? "items-end" : "items-start"} flex flex-col`}>
+                      <div className={`max-w-[85%] md:max-w-[70%] min-w-0 ${isMe ? "items-end" : "items-start"} flex flex-col`}>
                         <div className="flex items-center gap-2 mb-0.5 text-xs text-muted-foreground">
-                          <span>{isMe ? "You" : m.author_name}</span>
+                          <span className="truncate max-w-[140px]">{isMe ? "You" : m.author_name}</span>
                           <span>·</span>
                           <span>{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
-                        <div className={`group rounded-2xl px-4 py-2 text-sm ${isMe ? "gradient-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
-                          <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                        <div className={`group rounded-2xl px-3 py-2 md:px-4 text-sm ${isMe ? "gradient-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
+                          <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{m.content}</p>
                         </div>
                         {(isMe || isOwner) && (
                           <button onClick={() => deleteMessage(m.id)} className="text-xs text-muted-foreground hover:text-destructive mt-0.5">
@@ -458,15 +458,15 @@ function GroupDetailPage() {
               )}
               <div ref={messagesEndRef} />
             </div>
-            <form onSubmit={sendMessage} className="mt-4 flex gap-2">
+            <form onSubmit={sendMessage} className="mt-3 md:mt-4 flex gap-2">
               <input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
                 maxLength={4000}
-                className="flex-1 rounded-xl border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
+                className="flex-1 min-w-0 rounded-xl border border-input bg-background px-3 md:px-4 py-2.5 text-base md:text-sm outline-none focus:border-accent"
               />
-              <button type="submit" disabled={!newMessage.trim()} className="rounded-xl gradient-primary px-4 py-2.5 text-primary-foreground disabled:opacity-50">
+              <button type="submit" disabled={!newMessage.trim()} aria-label="Send message" className="shrink-0 rounded-xl gradient-primary px-4 py-2.5 text-primary-foreground disabled:opacity-50">
                 <Send className="h-4 w-4" />
               </button>
             </form>
