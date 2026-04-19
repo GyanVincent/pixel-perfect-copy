@@ -140,7 +140,7 @@ function GroupDetailPage() {
 
     load();
     return () => { cancelled = true; };
-  }, [groupId, user]);
+  }, [groupId, user?.id]);
 
   // Realtime subscriptions
   useEffect(() => {
@@ -172,7 +172,7 @@ function GroupDetailPage() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [groupId, user]);
+  }, [groupId, user?.id]);
 
   // Leaderboard
   useEffect(() => {
