@@ -172,7 +172,7 @@ function GroupDetailPage() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [groupId, user]);
+  }, [groupId, user?.id]);
 
   // Leaderboard
   useEffect(() => {
