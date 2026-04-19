@@ -140,7 +140,7 @@ function GroupDetailPage() {
 
     load();
     return () => { cancelled = true; };
-  }, [groupId, user]);
+  }, [groupId, user?.id]);
 
   // Realtime subscriptions
   useEffect(() => {
