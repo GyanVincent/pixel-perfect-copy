@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, type FormEvent } from "react";
 import { Users, Plus, KeyRound, ChevronRight, Hash } from "lucide-react";
 
-export const Route = createFileRoute("/groups")({
+export const Route = createFileRoute("/groups/")({
   component: GroupsPage,
 });
 

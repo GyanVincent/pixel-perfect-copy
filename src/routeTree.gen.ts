@@ -16,11 +16,11 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GroupsIndexRouteImport } from './routes/groups.index'
 import { Route as GroupsGroupIdRouteImport } from './routes/groups.$groupId'
 import { Route as ApiAiChatRouteImport } from './routes/api/ai-chat'
 
@@ -59,11 +59,6 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GroupsRoute = GroupsRouteImport.update({
-  id: '/groups',
-  path: '/groups',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -84,10 +79,15 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GroupsIndexRoute = GroupsIndexRouteImport.update({
+  id: '/groups/',
+  path: '/groups/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GroupsGroupIdRoute = GroupsGroupIdRouteImport.update({
-  id: '/$groupId',
-  path: '/$groupId',
-  getParentRoute: () => GroupsRoute,
+  id: '/groups/$groupId',
+  path: '/groups/$groupId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAiChatRoute = ApiAiChatRouteImport.update({
   id: '/api/ai-chat',
@@ -100,7 +100,6 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/groups': typeof GroupsRouteWithChildren
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/profile': typeof ProfileRoute
@@ -110,13 +109,13 @@ export interface FileRoutesByFullPath {
   '/tutor': typeof TutorRoute
   '/api/ai-chat': typeof ApiAiChatRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
+  '/groups/': typeof GroupsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/groups': typeof GroupsRouteWithChildren
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/profile': typeof ProfileRoute
@@ -126,6 +125,7 @@ export interface FileRoutesByTo {
   '/tutor': typeof TutorRoute
   '/api/ai-chat': typeof ApiAiChatRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
+  '/groups': typeof GroupsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -133,7 +133,6 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/groups': typeof GroupsRouteWithChildren
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/profile': typeof ProfileRoute
@@ -143,6 +142,7 @@ export interface FileRoutesById {
   '/tutor': typeof TutorRoute
   '/api/ai-chat': typeof ApiAiChatRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
+  '/groups/': typeof GroupsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,7 +151,6 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/dashboard'
     | '/forgot-password'
-    | '/groups'
     | '/login'
     | '/practice'
     | '/profile'
@@ -161,13 +160,13 @@ export interface FileRouteTypes {
     | '/tutor'
     | '/api/ai-chat'
     | '/groups/$groupId'
+    | '/groups/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/analytics'
     | '/dashboard'
     | '/forgot-password'
-    | '/groups'
     | '/login'
     | '/practice'
     | '/profile'
@@ -177,13 +176,13 @@ export interface FileRouteTypes {
     | '/tutor'
     | '/api/ai-chat'
     | '/groups/$groupId'
+    | '/groups'
   id:
     | '__root__'
     | '/'
     | '/analytics'
     | '/dashboard'
     | '/forgot-password'
-    | '/groups'
     | '/login'
     | '/practice'
     | '/profile'
@@ -193,6 +192,7 @@ export interface FileRouteTypes {
     | '/tutor'
     | '/api/ai-chat'
     | '/groups/$groupId'
+    | '/groups/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -200,7 +200,6 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  GroupsRoute: typeof GroupsRouteWithChildren
   LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
   ProfileRoute: typeof ProfileRoute
@@ -209,6 +208,8 @@ export interface RootRouteChildren {
   SubjectsRoute: typeof SubjectsRoute
   TutorRoute: typeof TutorRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
+  GroupsGroupIdRoute: typeof GroupsGroupIdRoute
+  GroupsIndexRoute: typeof GroupsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -262,13 +263,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/groups': {
-      id: '/groups'
-      path: '/groups'
-      fullPath: '/groups'
-      preLoaderRoute: typeof GroupsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
@@ -297,12 +291,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/groups/': {
+      id: '/groups/'
+      path: '/groups'
+      fullPath: '/groups/'
+      preLoaderRoute: typeof GroupsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/groups/$groupId': {
       id: '/groups/$groupId'
-      path: '/$groupId'
+      path: '/groups/$groupId'
       fullPath: '/groups/$groupId'
       preLoaderRoute: typeof GroupsGroupIdRouteImport
-      parentRoute: typeof GroupsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/ai-chat': {
       id: '/api/ai-chat'
@@ -314,23 +315,11 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface GroupsRouteChildren {
-  GroupsGroupIdRoute: typeof GroupsGroupIdRoute
-}
-
-const GroupsRouteChildren: GroupsRouteChildren = {
-  GroupsGroupIdRoute: GroupsGroupIdRoute,
-}
-
-const GroupsRouteWithChildren =
-  GroupsRoute._addFileChildren(GroupsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  GroupsRoute: GroupsRouteWithChildren,
   LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
   ProfileRoute: ProfileRoute,
@@ -339,6 +328,8 @@ const rootRouteChildren: RootRouteChildren = {
   SubjectsRoute: SubjectsRoute,
   TutorRoute: TutorRoute,
   ApiAiChatRoute: ApiAiChatRoute,
+  GroupsGroupIdRoute: GroupsGroupIdRoute,
+  GroupsIndexRoute: GroupsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
