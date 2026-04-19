@@ -404,7 +404,7 @@ function GroupDetailPage() {
           </div>
         </div>
 
-        <div className="flex gap-1 mb-6 border-b border-border">
+        <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none">
           {([
             { key: "chat", label: "Chat", icon: MessageSquare },
             { key: "resources", label: "Resources", icon: BookMarked },
@@ -414,7 +414,7 @@ function GroupDetailPage() {
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              className={`flex shrink-0 items-center gap-2 px-3 md:px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
                 tab === key ? "border-accent text-accent" : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
