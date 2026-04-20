@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { createServerClient } from "@supabase/ssr";
 
 const BASE_SYSTEM_PROMPT = `You are SmartPrep AI Tutor — a warm, sharp, Socratic university tutor.
 
