@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback } from "react";
-import { Play, CheckCircle, XCircle, ArrowRight, RotateCcw, Trophy } from "lucide-react";
+import { Play, CheckCircle, XCircle, ArrowRight, RotateCcw, Trophy, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const Route = createFileRoute("/practice")({
