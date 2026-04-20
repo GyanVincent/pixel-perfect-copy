@@ -13,7 +13,7 @@ export function MobileNav() {
   const location = useLocation();
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-card/95 backdrop-blur md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 flex w-full max-w-full border-t border-border bg-card/95 backdrop-blur md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {items.map(({ to, label, icon: Icon }) => {
