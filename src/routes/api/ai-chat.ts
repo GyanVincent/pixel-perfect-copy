@@ -73,9 +73,8 @@ export const Route = createFileRoute("/api/ai-chat")({
             });
           }
 
-          // Identify the user (for persistence). Use the user's JWT.
-          const authClient = getAuthedClient(request);
-          const { data: { user } } = await authClient.auth.getUser();
+          // Identify the user (for persistence). Validate the bearer token.
+          const user = await getUserFromRequest(request);
 
           const subjectContext = await loadSubjectContext(subjectId);
           const systemPrompt = BASE_SYSTEM_PROMPT + subjectContext;
