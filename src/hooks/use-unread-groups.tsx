@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 
 const STORAGE_KEY = "smartprep:groups:lastRead";
+const NOTIF_PROMPT_KEY = "smartprep:notif:prompted";
 
 type LastReadMap = Record<string, string>; // groupId -> ISO timestamp
 
@@ -35,8 +36,56 @@ export function markGroupRead(groupId: string) {
 }
 
 /**
+ * Ask for browser-notification permission once, the first time we have an authenticated user.
+ * No-op if not supported, already decided, or already prompted in this browser.
+ */
+export async function ensureNotificationPermission() {
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  if (Notification.permission !== "default") return;
+  try {
+    if (window.localStorage.getItem(NOTIF_PROMPT_KEY) === "1") return;
+    window.localStorage.setItem(NOTIF_PROMPT_KEY, "1");
+  } catch {
+    // ignore
+  }
+  try {
+    await Notification.requestPermission();
+  } catch {
+    // ignore
+  }
+}
+
+function isAppBackgrounded(): boolean {
+  if (typeof document === "undefined") return false;
+  // Hidden tab, minimized window, or unfocused window all count as "background".
+  return document.visibilityState !== "visible" || !document.hasFocus();
+}
+
+function showGroupNotification(opts: { title: string; body: string; groupId: string }) {
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+  try {
+    const n = new Notification(opts.title, {
+      body: opts.body,
+      tag: `group-${opts.groupId}`, // collapse multiple messages from the same group
+      renotify: false,
+    });
+    n.onclick = () => {
+      window.focus();
+      window.location.href = `/groups/${opts.groupId}`;
+      n.close();
+    };
+  } catch (err) {
+    console.error("[unread-groups] notification error", err);
+  }
+}
+
+/**
  * Returns the total unread message count across all groups the current user belongs to.
  * Messages authored by the current user are not counted.
+ *
+ * Also fires a browser notification when a new message arrives in one of the user's
+ * groups while the app is backgrounded (tab hidden or window unfocused).
  */
 export function useUnreadGroups(): number {
   const { user } = useAuth();
@@ -48,9 +97,13 @@ export function useUnreadGroups(): number {
       return;
     }
 
+    void ensureNotificationPermission();
+
     let cancelled = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let groupIds: string[] = [];
+    const groupNames = new Map<string, string>();
+    const authorNames = new Map<string, string>();
 
     const recompute = async () => {
       if (groupIds.length === 0) {
@@ -58,8 +111,6 @@ export function useUnreadGroups(): number {
         return;
       }
       const lastRead = readLastRead();
-      let total = 0;
-      // Run per-group counts in parallel.
       const results = await Promise.all(
         groupIds.map(async (gid) => {
           const since = lastRead[gid] || "1970-01-01T00:00:00Z";
@@ -73,8 +124,7 @@ export function useUnreadGroups(): number {
         }),
       );
       if (cancelled) return;
-      total = results.reduce((a, b) => a + b, 0);
-      setUnread(total);
+      setUnread(results.reduce((a, b) => a + b, 0));
     };
 
     const init = async () => {
@@ -92,21 +142,53 @@ export function useUnreadGroups(): number {
 
       if (groupIds.length === 0) return;
 
-      // Subscribe to new messages in any of the user's groups.
+      // Cache group names for notification titles.
+      const { data: groups } = await supabase
+        .from("study_groups")
+        .select("id, name")
+        .in("id", groupIds);
+      (groups || []).forEach((g) => groupNames.set(g.id, g.name));
+
       channel = supabase
         .channel(`unread-groups-${user.id}`)
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "study_group_messages" },
-          (payload) => {
-            const m = payload.new as { group_id: string; user_id: string; created_at: string };
+          async (payload) => {
+            const m = payload.new as {
+              group_id: string;
+              user_id: string;
+              created_at: string;
+              content: string;
+            };
             if (!groupIds.includes(m.group_id)) return;
             if (m.user_id === user.id) return;
+
             const lastRead = readLastRead();
             const since = lastRead[m.group_id] || "1970-01-01T00:00:00Z";
-            if (new Date(m.created_at) > new Date(since)) {
-              setUnread((prev) => prev + 1);
+            if (new Date(m.created_at) <= new Date(since)) return;
+
+            setUnread((prev) => prev + 1);
+
+            if (!isAppBackgrounded()) return;
+
+            // Resolve author name (cached) for the notification body.
+            let author = authorNames.get(m.user_id);
+            if (!author) {
+              const { data: prof } = await supabase
+                .from("profiles")
+                .select("full_name")
+                .eq("user_id", m.user_id)
+                .maybeSingle();
+              author = prof?.full_name || "Someone";
+              authorNames.set(m.user_id, author);
             }
+            const groupName = groupNames.get(m.group_id) || "Study group";
+            showGroupNotification({
+              title: `${author} in ${groupName}`,
+              body: m.content.length > 140 ? m.content.slice(0, 137) + "…" : m.content,
+              groupId: m.group_id,
+            });
           },
         )
         .subscribe();
