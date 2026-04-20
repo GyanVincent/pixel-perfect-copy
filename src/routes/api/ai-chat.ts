@@ -44,28 +44,16 @@ async function loadSubjectContext(subjectId: string | null | undefined): Promise
   }
 }
 
-function getAuthedClient(request: Request) {
-  return createServerClient(
-    process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!,
-    process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          const cookie = request.headers.get("cookie") || "";
-          return cookie.split(";").map((c) => {
-            const [name, ...rest] = c.trim().split("=");
-            return { name, value: rest.join("=") };
-          }).filter((c) => c.name);
-        },
-        setAll() { /* no-op */ },
-      },
-      global: {
-        headers: {
-          Authorization: request.headers.get("Authorization") || "",
-        },
-      },
-    },
-  );
+async function getUserFromRequest(request: Request) {
+  const auth = request.headers.get("Authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (!token) return null;
+  try {
+    const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+    return user;
+  } catch {
+    return null;
+  }
 }
 
 export const Route = createFileRoute("/api/ai-chat")({
