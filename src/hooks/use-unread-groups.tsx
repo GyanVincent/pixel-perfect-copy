@@ -68,7 +68,6 @@ function showGroupNotification(opts: { title: string; body: string; groupId: str
     const n = new Notification(opts.title, {
       body: opts.body,
       tag: `group-${opts.groupId}`, // collapse multiple messages from the same group
-      renotify: false,
     });
     n.onclick = () => {
       window.focus();
