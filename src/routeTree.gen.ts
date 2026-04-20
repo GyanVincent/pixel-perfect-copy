@@ -22,6 +22,8 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GroupsIndexRouteImport } from './routes/groups.index'
 import { Route as GroupsGroupIdRouteImport } from './routes/groups.$groupId'
+import { Route as ApiAiMcqRouteImport } from './routes/api/ai-mcq'
+import { Route as ApiAiImageRouteImport } from './routes/api/ai-image'
 import { Route as ApiAiChatRouteImport } from './routes/api/ai-chat'
 
 const TutorRoute = TutorRouteImport.update({
@@ -89,6 +91,16 @@ const GroupsGroupIdRoute = GroupsGroupIdRouteImport.update({
   path: '/groups/$groupId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiMcqRoute = ApiAiMcqRouteImport.update({
+  id: '/api/ai-mcq',
+  path: '/api/ai-mcq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiImageRoute = ApiAiImageRouteImport.update({
+  id: '/api/ai-image',
+  path: '/api/ai-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiChatRoute = ApiAiChatRouteImport.update({
   id: '/api/ai-chat',
   path: '/api/ai-chat',
@@ -108,6 +120,8 @@ export interface FileRoutesByFullPath {
   '/subjects': typeof SubjectsRoute
   '/tutor': typeof TutorRoute
   '/api/ai-chat': typeof ApiAiChatRoute
+  '/api/ai-image': typeof ApiAiImageRoute
+  '/api/ai-mcq': typeof ApiAiMcqRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/groups/': typeof GroupsIndexRoute
 }
@@ -124,6 +138,8 @@ export interface FileRoutesByTo {
   '/subjects': typeof SubjectsRoute
   '/tutor': typeof TutorRoute
   '/api/ai-chat': typeof ApiAiChatRoute
+  '/api/ai-image': typeof ApiAiImageRoute
+  '/api/ai-mcq': typeof ApiAiMcqRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/groups': typeof GroupsIndexRoute
 }
@@ -141,6 +157,8 @@ export interface FileRoutesById {
   '/subjects': typeof SubjectsRoute
   '/tutor': typeof TutorRoute
   '/api/ai-chat': typeof ApiAiChatRoute
+  '/api/ai-image': typeof ApiAiImageRoute
+  '/api/ai-mcq': typeof ApiAiMcqRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/groups/': typeof GroupsIndexRoute
 }
@@ -159,6 +177,8 @@ export interface FileRouteTypes {
     | '/subjects'
     | '/tutor'
     | '/api/ai-chat'
+    | '/api/ai-image'
+    | '/api/ai-mcq'
     | '/groups/$groupId'
     | '/groups/'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +195,8 @@ export interface FileRouteTypes {
     | '/subjects'
     | '/tutor'
     | '/api/ai-chat'
+    | '/api/ai-image'
+    | '/api/ai-mcq'
     | '/groups/$groupId'
     | '/groups'
   id:
@@ -191,6 +213,8 @@ export interface FileRouteTypes {
     | '/subjects'
     | '/tutor'
     | '/api/ai-chat'
+    | '/api/ai-image'
+    | '/api/ai-mcq'
     | '/groups/$groupId'
     | '/groups/'
   fileRoutesById: FileRoutesById
@@ -208,6 +232,8 @@ export interface RootRouteChildren {
   SubjectsRoute: typeof SubjectsRoute
   TutorRoute: typeof TutorRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
+  ApiAiImageRoute: typeof ApiAiImageRoute
+  ApiAiMcqRoute: typeof ApiAiMcqRoute
   GroupsGroupIdRoute: typeof GroupsGroupIdRoute
   GroupsIndexRoute: typeof GroupsIndexRoute
 }
@@ -305,6 +331,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupsGroupIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai-mcq': {
+      id: '/api/ai-mcq'
+      path: '/api/ai-mcq'
+      fullPath: '/api/ai-mcq'
+      preLoaderRoute: typeof ApiAiMcqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai-image': {
+      id: '/api/ai-image'
+      path: '/api/ai-image'
+      fullPath: '/api/ai-image'
+      preLoaderRoute: typeof ApiAiImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai-chat': {
       id: '/api/ai-chat'
       path: '/api/ai-chat'
@@ -328,6 +368,8 @@ const rootRouteChildren: RootRouteChildren = {
   SubjectsRoute: SubjectsRoute,
   TutorRoute: TutorRoute,
   ApiAiChatRoute: ApiAiChatRoute,
+  ApiAiImageRoute: ApiAiImageRoute,
+  ApiAiMcqRoute: ApiAiMcqRoute,
   GroupsGroupIdRoute: GroupsGroupIdRoute,
   GroupsIndexRoute: GroupsIndexRoute,
 }
