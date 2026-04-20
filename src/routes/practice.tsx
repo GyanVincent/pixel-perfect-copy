@@ -248,7 +248,27 @@ function PracticePage() {
                   </div>
                 )}
 
-                <div className="mt-6 flex justify-end">
+                <div className="mt-6 flex flex-wrap justify-end gap-2">
+                  {state === "review" && (
+                    <button
+                      onClick={() => {
+                        const opts = (currentQuestion.options as string[])
+                          .map((o, i) => `${String.fromCharCode(65 + i)}. ${o}`)
+                          .join("\n");
+                        const correctLetter = String.fromCharCode(65 + currentQuestion.correct_answer);
+                        const pickedLetter = selectedAnswer !== null ? String.fromCharCode(65 + selectedAnswer) : "—";
+                        const prefill = `I'm practicing and got this question wrong. Please explain it clearly, point out where my reasoning likely went wrong, and walk through how to arrive at the correct answer.\n\nQuestion: ${currentQuestion.question_text}\n\nOptions:\n${opts}\n\nCorrect answer: ${correctLetter}\nMy answer: ${pickedLetter}`;
+                        navigate({
+                          to: "/tutor",
+                          search: { prefill, subjectId: selectedSubject || undefined },
+                        });
+                      }}
+                      className="flex items-center gap-2 rounded-xl border border-accent/40 bg-accent/5 px-4 py-2.5 text-sm font-semibold text-accent hover:bg-accent/10"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Explain with AI Tutor
+                    </button>
+                  )}
                   {state === "active" ? (
                     <button
                       onClick={submitAnswer}
