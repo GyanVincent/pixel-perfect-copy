@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Users, MessageSquare, BookMarked, Trophy, Send, Hash, Copy, Check, ArrowLeft, ExternalLink, Trash2, Play, Plus } from "lucide-react";
+import { markGroupRead } from "@/hooks/use-unread-groups";
 
 export const Route = createFileRoute("/groups/$groupId")({
   component: GroupDetailPage,
@@ -208,10 +209,13 @@ function GroupDetailPage() {
     load();
   }, [tab, members]);
 
-  // Auto-scroll chat
+  // Auto-scroll chat + mark as read
   useEffect(() => {
-    if (tab === "chat") messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, tab]);
+    if (tab === "chat") {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      markGroupRead(groupId);
+    }
+  }, [messages, tab, groupId]);
 
   const sendMessage = async (e: FormEvent) => {
     e.preventDefault();

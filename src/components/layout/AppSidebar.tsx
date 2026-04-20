@@ -1,6 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { LayoutDashboard, BookOpen, Play, BarChart3, User, LogOut, GraduationCap, Sparkles, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useUnreadGroups } from "@/hooks/use-unread-groups";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -15,6 +16,7 @@ const navItems = [
 export function AppSidebar() {
   const location = useLocation();
   const { logout, user } = useAuth();
+  const unreadGroups = useUnreadGroups();
 
   return (
     <aside className="hidden md:flex fixed left-0 top-0 z-30 h-screen w-64 flex-col border-r border-border bg-card">
@@ -28,6 +30,7 @@ export function AppSidebar() {
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map(({ to, label, icon: Icon }) => {
           const isActive = location.pathname === to || location.pathname.startsWith(to + "/");
+          const showBadge = to === "/groups" && unreadGroups > 0;
           return (
             <Link
               key={to}
@@ -39,7 +42,12 @@ export function AppSidebar() {
               }`}
             >
               <Icon className="h-4.5 w-4.5" />
-              {label}
+              <span className="flex-1">{label}</span>
+              {showBadge && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-accent-foreground">
+                  {unreadGroups > 99 ? "99+" : unreadGroups}
+                </span>
+              )}
             </Link>
           );
         })}
