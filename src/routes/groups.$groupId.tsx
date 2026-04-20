@@ -209,10 +209,13 @@ function GroupDetailPage() {
     load();
   }, [tab, members]);
 
-  // Auto-scroll chat
+  // Auto-scroll chat + mark as read
   useEffect(() => {
-    if (tab === "chat") messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, tab]);
+    if (tab === "chat") {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      markGroupRead(groupId);
+    }
+  }, [messages, tab, groupId]);
 
   const sendMessage = async (e: FormEvent) => {
     e.preventDefault();
