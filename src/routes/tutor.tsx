@@ -52,6 +52,10 @@ function TutorPage() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // Tracks the conversation id whose messages are currently in state, so we
+  // don't re-fetch (and wipe) messages when WE assign a new conversation id
+  // ourselves after the first send of a brand-new chat.
+  const loadedConvIdRef = useRef<string | null>(search.conversationId || null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) navigate({ to: "/login" });
