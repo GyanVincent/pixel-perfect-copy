@@ -129,7 +129,7 @@ function TutorPage() {
     setGeneratedQs(null);
     setError(null);
     setShowSidebar(false);
-    navigate({ to: "/tutor", search: {} });
+    navigate({ to: "/tutor", search: { conversationId: undefined, prefill: undefined, subjectId: undefined } });
   };
 
   const openConversation = (id: string) => {
