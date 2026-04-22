@@ -98,6 +98,7 @@ function DashboardPage() {
         <div className="grid gap-4 sm:grid-cols-2 mb-8">
           <Link
             to="/practice"
+            search={{ subjectId: undefined, groupId: undefined }}
             className="stat-card flex items-center gap-4 group"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary shrink-0">

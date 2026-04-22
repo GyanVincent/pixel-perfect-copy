@@ -52,6 +52,10 @@ function TutorPage() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // Tracks the conversation id whose messages are currently in state, so we
+  // don't re-fetch (and wipe) messages when WE assign a new conversation id
+  // ourselves after the first send of a brand-new chat.
+  const loadedConvIdRef = useRef<string | null>(search.conversationId || null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) navigate({ to: "/login" });
@@ -79,9 +83,13 @@ function TutorPage() {
     setConversations(data || []);
   }, [user?.id]);
 
-  // Load messages when a conversation is opened
+  // Load messages when a conversation is opened (only when the id changes
+  // to one we haven't loaded yet — so internally-assigned ids after the first
+  // send don't trigger a refetch that wipes the streamed assistant message).
   useEffect(() => {
     if (!conversationId || !user) return;
+    if (loadedConvIdRef.current === conversationId) return;
+    loadedConvIdRef.current = conversationId;
     let cancelled = false;
     (async () => {
       const { data: conv } = await supabase
@@ -121,7 +129,7 @@ function TutorPage() {
     setGeneratedQs(null);
     setError(null);
     setShowSidebar(false);
-    navigate({ to: "/tutor", search: {} });
+    navigate({ to: "/tutor", search: { conversationId: undefined, prefill: undefined, subjectId: undefined } });
   };
 
   const openConversation = (id: string) => {
@@ -130,7 +138,7 @@ function TutorPage() {
     setGeneratedQs(null);
     setError(null);
     setShowSidebar(false);
-    navigate({ to: "/tutor", search: { conversationId: id } });
+    navigate({ to: "/tutor", search: { conversationId: id, prefill: undefined, subjectId: undefined } });
   };
 
   const deleteConversation = async (id: string) => {

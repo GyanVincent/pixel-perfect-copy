@@ -149,7 +149,7 @@ function SubjectsPage() {
 
                   <Link
                     to="/practice"
-                    search={{ subjectId: subject.id }}
+                    search={{ subjectId: subject.id, groupId: undefined }}
                     className="flex items-center gap-2 text-sm font-medium text-accent hover:underline"
                   >
                     Practice this subject
