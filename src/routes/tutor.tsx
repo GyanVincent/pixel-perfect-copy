@@ -251,7 +251,7 @@ function TutorPage() {
       setStreaming(false);
       abortRef.current = null;
     }
-  }, [messages, streaming, session, subjectId, conversationId, refreshConversations]);
+  }, [messages, streaming, session, subjectId, conversationId, refreshConversations, navigate]);
 
   const regenerate = useCallback(async () => {
     if (streaming) return;
