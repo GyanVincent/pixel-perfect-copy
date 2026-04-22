@@ -190,7 +190,18 @@ function TutorPage() {
 
       const newConvId = resp.headers.get("X-Conversation-Id");
       if (newConvId && newConvId !== conversationId) {
+        // Mark this id as already loaded BEFORE we set state, so the load
+        // effect doesn't re-fetch from the DB and overwrite the user message
+        // we just appended locally (the assistant insert happens in the
+        // server background task and may not be in the DB yet).
+        loadedConvIdRef.current = newConvId;
         setConversationId(newConvId);
+        // Reflect the new conversation id in the URL so refresh works.
+        navigate({
+          to: "/tutor",
+          search: { conversationId: newConvId, prefill: undefined, subjectId: subjectId || undefined },
+          replace: true,
+        });
       }
 
       const reader = resp.body.getReader();
