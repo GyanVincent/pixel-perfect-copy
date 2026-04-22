@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/ai-mcq")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { topic, count, difficulty } = await request.json();
+          const { topic, count, difficulty, exclude } = await request.json();
           if (!topic || typeof topic !== "string" || topic.length > 500) {
             return new Response(JSON.stringify({ error: "Invalid topic" }), {
               status: 400, headers: { "Content-Type": "application/json" },
@@ -16,6 +16,9 @@ export const Route = createFileRoute("/api/ai-mcq")({
           }
           const n = Math.max(1, Math.min(5, Number(count) || 3));
           const diff = ["easy", "medium", "hard"].includes(difficulty) ? difficulty : "medium";
+          const excludeList: string[] = Array.isArray(exclude)
+            ? exclude.filter((s) => typeof s === "string").slice(0, 30)
+            : [];
 
           const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
           if (!LOVABLE_API_KEY) {
@@ -23,6 +26,11 @@ export const Route = createFileRoute("/api/ai-mcq")({
               status: 500, headers: { "Content-Type": "application/json" },
             });
           }
+          const userPrompt =
+            `Generate ${n} ${diff} multiple-choice questions about: ${topic}` +
+            (excludeList.length
+              ? `\n\nDo NOT repeat or paraphrase any of these previously-asked questions:\n- ${excludeList.join("\n- ")}\n\nCover different angles, sub-topics, or difficulty nuances.`
+              : "");
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -33,7 +41,7 @@ export const Route = createFileRoute("/api/ai-mcq")({
               model: "google/gemini-3-flash-preview",
               messages: [
                 { role: "system", content: SYSTEM },
-                { role: "user", content: `Generate ${n} ${diff} multiple-choice questions about: ${topic}` },
+                { role: "user", content: userPrompt },
               ],
               tools: [{
                 type: "function",
