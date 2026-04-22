@@ -318,21 +318,29 @@ function TutorPage() {
     }
   };
 
-  const generateMcq = async () => {
-    const lastUser = [...messages].reverse().find((m) => m.role === "user");
-    const subject = subjects.find((s) => s.id === subjectId);
-    const topic = lastUser?.content || subject?.name || window.prompt("Topic for practice questions:", "") || "";
+  const mcqTopicRef = useRef<string>("");
+
+  const generateMcq = async (opts?: { append?: boolean }) => {
+    const append = !!opts?.append;
+    let topic = mcqTopicRef.current;
+    if (!append || !topic) {
+      const lastUser = [...messages].reverse().find((m) => m.role === "user");
+      const subject = subjects.find((s) => s.id === subjectId);
+      topic = lastUser?.content || subject?.name || window.prompt("Topic for practice questions:", "") || "";
+    }
     if (!topic.trim()) return;
+    mcqTopicRef.current = topic;
     setGeneratingMcq(true);
     try {
+      const existing = append && generatedQs ? generatedQs.map((q) => q.question) : [];
       const resp = await fetch("/api/ai-mcq", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, count: 3, difficulty: "medium" }),
+        body: JSON.stringify({ topic, count: 3, difficulty: "medium", exclude: existing }),
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || "Failed");
-      setGeneratedQs(data.questions);
+      setGeneratedQs((prev) => (append && prev ? [...prev, ...data.questions] : data.questions));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to generate questions");
     } finally {
@@ -526,6 +534,14 @@ function TutorPage() {
                 {generatedQs.map((q, idx) => (
                   <McqCard key={idx} q={q} idx={idx} />
                 ))}
+                <button
+                  onClick={() => void generateMcq({ append: true })}
+                  disabled={generatingMcq}
+                  className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-accent/30 bg-background px-3 py-2 text-xs font-medium hover:bg-accent/10 disabled:opacity-50"
+                >
+                  {generatingMcq ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                  {generatingMcq ? "Generating..." : "Generate more questions"}
+                </button>
               </div>
             )}
 
