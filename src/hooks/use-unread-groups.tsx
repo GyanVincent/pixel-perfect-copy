@@ -148,8 +148,11 @@ export function useUnreadGroups(): number {
         .in("id", groupIds);
       (groups || []).forEach((g) => groupNames.set(g.id, g.name));
 
+      if (cancelled) return;
+      // Unique channel name per mount to avoid "cannot add postgres_changes
+      // callbacks after subscribe()" when React StrictMode re-mounts.
       channel = supabase
-        .channel(`unread-groups-${user.id}`)
+        .channel(`unread-groups-${user.id}-${Math.random().toString(36).slice(2)}`)
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "study_group_messages" },
@@ -189,8 +192,13 @@ export function useUnreadGroups(): number {
               groupId: m.group_id,
             });
           },
-        )
-        .subscribe();
+        );
+      if (cancelled) {
+        supabase.removeChannel(channel);
+        channel = null;
+        return;
+      }
+      channel.subscribe();
     };
 
     const onRead = () => {
