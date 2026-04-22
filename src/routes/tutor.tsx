@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { MarkdownMessage } from "@/components/tutor/MarkdownMessage";
+import { DownloadImageButton } from "@/components/tutor/DownloadImageButton";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tutor")({
@@ -479,7 +480,12 @@ function TutorPage() {
                     {m.role === "assistant" ? (
                       <>
                         {m.image_url && (
-                          <img src={m.image_url} alt="Generated diagram" className="mb-2 rounded-lg max-w-full" />
+                          <div className="mb-2">
+                            <img src={m.image_url} alt="Generated diagram" className="rounded-lg max-w-full" />
+                            <div className="mt-1.5 flex justify-end">
+                              <DownloadImageButton src={m.image_url} filename={`diagram-${i + 1}.png`} />
+                            </div>
+                          </div>
                         )}
                         <MarkdownMessage content={m.content || (streaming && i === messages.length - 1 ? "…" : "")} />
                       </>
