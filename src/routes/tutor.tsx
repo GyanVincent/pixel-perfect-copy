@@ -83,9 +83,13 @@ function TutorPage() {
     setConversations(data || []);
   }, [user?.id]);
 
-  // Load messages when a conversation is opened
+  // Load messages when a conversation is opened (only when the id changes
+  // to one we haven't loaded yet — so internally-assigned ids after the first
+  // send don't trigger a refetch that wipes the streamed assistant message).
   useEffect(() => {
     if (!conversationId || !user) return;
+    if (loadedConvIdRef.current === conversationId) return;
+    loadedConvIdRef.current = conversationId;
     let cancelled = false;
     (async () => {
       const { data: conv } = await supabase
