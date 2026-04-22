@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { MarkdownMessage } from "@/components/tutor/MarkdownMessage";
+import { DownloadImageButton } from "@/components/tutor/DownloadImageButton";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tutor")({
@@ -190,7 +191,18 @@ function TutorPage() {
 
       const newConvId = resp.headers.get("X-Conversation-Id");
       if (newConvId && newConvId !== conversationId) {
+        // Mark this id as already loaded BEFORE we set state, so the load
+        // effect doesn't re-fetch from the DB and overwrite the user message
+        // we just appended locally (the assistant insert happens in the
+        // server background task and may not be in the DB yet).
+        loadedConvIdRef.current = newConvId;
         setConversationId(newConvId);
+        // Reflect the new conversation id in the URL so refresh works.
+        navigate({
+          to: "/tutor",
+          search: { conversationId: newConvId, prefill: undefined, subjectId: subjectId || undefined },
+          replace: true,
+        });
       }
 
       const reader = resp.body.getReader();
@@ -239,7 +251,7 @@ function TutorPage() {
       setStreaming(false);
       abortRef.current = null;
     }
-  }, [messages, streaming, session, subjectId, conversationId, refreshConversations]);
+  }, [messages, streaming, session, subjectId, conversationId, refreshConversations, navigate]);
 
   const regenerate = useCallback(async () => {
     if (streaming) return;
@@ -468,7 +480,12 @@ function TutorPage() {
                     {m.role === "assistant" ? (
                       <>
                         {m.image_url && (
-                          <img src={m.image_url} alt="Generated diagram" className="mb-2 rounded-lg max-w-full" />
+                          <div className="mb-2">
+                            <img src={m.image_url} alt="Generated diagram" className="rounded-lg max-w-full" />
+                            <div className="mt-1.5 flex justify-end">
+                              <DownloadImageButton src={m.image_url} filename={`diagram-${i + 1}.png`} />
+                            </div>
+                          </div>
                         )}
                         <MarkdownMessage content={m.content || (streaming && i === messages.length - 1 ? "…" : "")} />
                       </>

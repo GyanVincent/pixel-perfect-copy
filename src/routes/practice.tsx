@@ -60,6 +60,15 @@ function PracticePage() {
   const startSession = useCallback(async () => {
     if (!user || !selectedSubject) return;
 
+    // Hard-reset all quiz state BEFORE loading the new set, so re-entering
+    // the same topic doesn't carry over selections, highlights, or
+    // explanations from the previous session.
+    setQuestions([]);
+    setAnswers([]);
+    setSelectedAnswer(null);
+    setCurrentIndex(0);
+    setSessionId(null);
+
     const { data: qs } = await supabase
       .from("questions")
       .select("id, question_text, options, correct_answer, explanation, difficulty, topic_id, topics!inner(subject_id)")
@@ -78,9 +87,6 @@ function PracticePage() {
       .single();
 
     if (session) setSessionId(session.id);
-    setCurrentIndex(0);
-    setAnswers([]);
-    setSelectedAnswer(null);
     setState("active");
   }, [user, selectedSubject, questionCount, groupId]);
 
