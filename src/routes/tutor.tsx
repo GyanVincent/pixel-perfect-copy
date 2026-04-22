@@ -138,7 +138,7 @@ function TutorPage() {
     setGeneratedQs(null);
     setError(null);
     setShowSidebar(false);
-    navigate({ to: "/tutor", search: { conversationId: id } });
+    navigate({ to: "/tutor", search: { conversationId: id, prefill: undefined, subjectId: undefined } });
   };
 
   const deleteConversation = async (id: string) => {
