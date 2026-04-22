@@ -563,7 +563,7 @@ function TutorPage() {
               Diagram
             </button>
             <button
-              onClick={generateMcq}
+              onClick={() => void generateMcq()}
               disabled={generatingMcq}
               className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
             >
