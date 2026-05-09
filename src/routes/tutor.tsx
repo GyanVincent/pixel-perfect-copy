@@ -240,6 +240,29 @@ function TutorPage() {
           }
         }
       }
+      // Persist the final assistant message from the client. Edge runtime
+      // background tasks are unreliable (especially on mobile), so we save
+      // here once streaming is complete.
+      const finalConvId = newConvId || conversationId;
+      if (assistant.trim() && finalConvId && session?.access_token) {
+        try {
+          await fetch("/api/ai-save-message", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              conversationId: finalConvId,
+              role: "assistant",
+              content: assistant,
+            }),
+            keepalive: true,
+          });
+        } catch (e) {
+          console.error("Failed to save assistant message", e);
+        }
+      }
       void refreshConversations();
     } catch (e) {
       if ((e as Error).name === "AbortError") {
