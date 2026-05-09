@@ -139,58 +139,12 @@ export const Route = createFileRoute("/api/ai-chat")({
             });
           }
 
-          // Tee the upstream stream: forward to client, accumulate to persist final assistant content.
-          const [forwardStream, captureStream] = upstream.body!.tee();
+          // Note: the assistant message is persisted by the client via
+          // /api/ai-save-message after the stream finishes. Background tasks
+          // are unreliable on edge runtimes (Cloudflare Workers) and were
+          // dropping the assistant message especially on mobile/flaky connections.
 
-          // Background task: parse capture stream and persist final assistant message.
-          (async () => {
-            try {
-              const reader = captureStream.getReader();
-              const decoder = new TextDecoder();
-              let textBuf = "";
-              let assistant = "";
-              let streamDone = false;
-              while (!streamDone) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                textBuf += decoder.decode(value, { stream: true });
-                let nl: number;
-                while ((nl = textBuf.indexOf("\n")) !== -1) {
-                  let line = textBuf.slice(0, nl);
-                  textBuf = textBuf.slice(nl + 1);
-                  if (line.endsWith("\r")) line = line.slice(0, -1);
-                  if (!line.startsWith("data: ")) continue;
-                  const json = line.slice(6).trim();
-                  if (json === "[DONE]") { streamDone = true; break; }
-                  try {
-                    const parsed = JSON.parse(json);
-                    const delta = parsed.choices?.[0]?.delta?.content;
-                    if (delta) assistant += delta;
-                  } catch {
-                    textBuf = line + "\n" + textBuf;
-                    break;
-                  }
-                }
-              }
-              if (user && convId && assistant.trim()) {
-                await supabaseAdmin.from("tutor_messages").insert({
-                  conversation_id: convId,
-                  user_id: user.id,
-                  role: "assistant",
-                  content: assistant,
-                });
-                await supabaseAdmin
-                  .from("tutor_conversations")
-                  .update({ updated_at: new Date().toISOString() })
-                  .eq("id", convId)
-                  .eq("user_id", user.id);
-              }
-            } catch (e) {
-              console.error("[ai-chat] capture error", e);
-            }
-          })();
-
-          return new Response(forwardStream, {
+          return new Response(upstream.body, {
             headers: {
               "Content-Type": "text/event-stream",
               "X-Conversation-Id": convId || "",
