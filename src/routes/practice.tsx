@@ -205,6 +205,17 @@ function PracticePage() {
 
           {(state === "active" || state === "review") && currentQuestion && (
             <motion.div key={`q-${currentIndex}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              {sessionStartedAt && Date.now() - sessionStartedAt < 4000 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="mb-4 flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-4 py-2.5 text-sm font-medium text-success"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  New practice session started — good luck!
+                </motion.div>
+              )}
               {/* Progress bar */}
               <div className="mb-6">
                 <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
