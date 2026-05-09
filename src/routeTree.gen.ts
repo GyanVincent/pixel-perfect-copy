@@ -22,6 +22,7 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GroupsIndexRouteImport } from './routes/groups.index'
 import { Route as GroupsGroupIdRouteImport } from './routes/groups.$groupId'
+import { Route as ApiAiSaveMessageRouteImport } from './routes/api/ai-save-message'
 import { Route as ApiAiMcqRouteImport } from './routes/api/ai-mcq'
 import { Route as ApiAiImageRouteImport } from './routes/api/ai-image'
 import { Route as ApiAiChatRouteImport } from './routes/api/ai-chat'
@@ -91,6 +92,11 @@ const GroupsGroupIdRoute = GroupsGroupIdRouteImport.update({
   path: '/groups/$groupId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiSaveMessageRoute = ApiAiSaveMessageRouteImport.update({
+  id: '/api/ai-save-message',
+  path: '/api/ai-save-message',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiMcqRoute = ApiAiMcqRouteImport.update({
   id: '/api/ai-mcq',
   path: '/api/ai-mcq',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/api/ai-chat': typeof ApiAiChatRoute
   '/api/ai-image': typeof ApiAiImageRoute
   '/api/ai-mcq': typeof ApiAiMcqRoute
+  '/api/ai-save-message': typeof ApiAiSaveMessageRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/groups/': typeof GroupsIndexRoute
 }
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/api/ai-chat': typeof ApiAiChatRoute
   '/api/ai-image': typeof ApiAiImageRoute
   '/api/ai-mcq': typeof ApiAiMcqRoute
+  '/api/ai-save-message': typeof ApiAiSaveMessageRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/groups': typeof GroupsIndexRoute
 }
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/api/ai-chat': typeof ApiAiChatRoute
   '/api/ai-image': typeof ApiAiImageRoute
   '/api/ai-mcq': typeof ApiAiMcqRoute
+  '/api/ai-save-message': typeof ApiAiSaveMessageRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/groups/': typeof GroupsIndexRoute
 }
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/api/ai-chat'
     | '/api/ai-image'
     | '/api/ai-mcq'
+    | '/api/ai-save-message'
     | '/groups/$groupId'
     | '/groups/'
   fileRoutesByTo: FileRoutesByTo
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/api/ai-chat'
     | '/api/ai-image'
     | '/api/ai-mcq'
+    | '/api/ai-save-message'
     | '/groups/$groupId'
     | '/groups'
   id:
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/api/ai-chat'
     | '/api/ai-image'
     | '/api/ai-mcq'
+    | '/api/ai-save-message'
     | '/groups/$groupId'
     | '/groups/'
   fileRoutesById: FileRoutesById
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   ApiAiChatRoute: typeof ApiAiChatRoute
   ApiAiImageRoute: typeof ApiAiImageRoute
   ApiAiMcqRoute: typeof ApiAiMcqRoute
+  ApiAiSaveMessageRoute: typeof ApiAiSaveMessageRoute
   GroupsGroupIdRoute: typeof GroupsGroupIdRoute
   GroupsIndexRoute: typeof GroupsIndexRoute
 }
@@ -331,6 +344,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupsGroupIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai-save-message': {
+      id: '/api/ai-save-message'
+      path: '/api/ai-save-message'
+      fullPath: '/api/ai-save-message'
+      preLoaderRoute: typeof ApiAiSaveMessageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai-mcq': {
       id: '/api/ai-mcq'
       path: '/api/ai-mcq'
@@ -370,6 +390,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiChatRoute: ApiAiChatRoute,
   ApiAiImageRoute: ApiAiImageRoute,
   ApiAiMcqRoute: ApiAiMcqRoute,
+  ApiAiSaveMessageRoute: ApiAiSaveMessageRoute,
   GroupsGroupIdRoute: GroupsGroupIdRoute,
   GroupsIndexRoute: GroupsIndexRoute,
 }
