@@ -264,6 +264,22 @@ function PracticePage() {
                   })}
                 </div>
 
+                <div className="mt-5">
+                  <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+                    Your notes / written answer (optional)
+                  </label>
+                  <textarea
+                    value={userNotes[currentQuestion.id] || ""}
+                    onChange={(e) =>
+                      setUserNotes((prev) => ({ ...prev, [currentQuestion.id]: e.target.value }))
+                    }
+                    disabled={state === "review"}
+                    placeholder="Write your reasoning, working, or full-text answer here..."
+                    rows={3}
+                    className="w-full resize-y rounded-xl border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-accent disabled:opacity-70"
+                  />
+                </div>
+
                 {state === "review" && currentQuestion.explanation && (
                   <div className="mt-5 rounded-xl bg-info/5 border border-info/20 px-4 py-3 text-sm text-foreground">
                     <strong className="text-info">Explanation:</strong> {currentQuestion.explanation}
