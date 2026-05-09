@@ -20,12 +20,18 @@ interface GroupInfo {
   subjects: { id: string; name: string; code: string } | null;
 }
 
+interface Profile {
+  name: string;
+  avatar: string | null;
+}
+
 interface Message {
   id: string;
   user_id: string;
   content: string;
   created_at: string;
   author_name?: string;
+  author_avatar?: string | null;
 }
 
 interface Member {
@@ -33,6 +39,7 @@ interface Member {
   role: string;
   joined_at: string;
   full_name?: string;
+  avatar_url?: string | null;
 }
 
 interface Resource {
@@ -48,6 +55,7 @@ interface Resource {
 interface LeaderRow {
   user_id: string;
   full_name: string;
+  avatar_url: string | null;
   total_questions: number;
   correct: number;
   accuracy: number;
@@ -119,19 +127,26 @@ function GroupDetailPage() {
           ...(res.data || []).map((r) => r.user_id),
         ]));
 
-        const profileMap = new Map<string, string>();
+        const profileMap = new Map<string, Profile>();
         if (userIds.length > 0) {
           const { data: profs } = await supabase
             .from("profiles")
-            .select("user_id, full_name")
+            .select("user_id, full_name, avatar_url")
             .in("user_id", userIds);
-          (profs || []).forEach((p) => profileMap.set(p.user_id, p.full_name || "Anonymous"));
+          (profs || []).forEach((p) =>
+            profileMap.set(p.user_id, {
+              name: (p.full_name && p.full_name.trim()) || "Member",
+              avatar: p.avatar_url || null,
+            })
+          );
         }
+        const nameOf = (uid: string) => profileMap.get(uid)?.name || "Member";
+        const avatarOf = (uid: string) => profileMap.get(uid)?.avatar || null;
 
         if (cancelled) return;
-        setMembers((mems.data || []).map((m) => ({ ...m, full_name: profileMap.get(m.user_id) || "Anonymous" })));
-        setMessages((msgs.data || []).map((m) => ({ ...m, author_name: profileMap.get(m.user_id) || "Anonymous" })));
-        setResources((res.data || []).map((r) => ({ ...r, author_name: profileMap.get(r.user_id) || "Anonymous" })));
+        setMembers((mems.data || []).map((m) => ({ ...m, full_name: nameOf(m.user_id), avatar_url: avatarOf(m.user_id) })));
+        setMessages((msgs.data || []).map((m) => ({ ...m, author_name: nameOf(m.user_id), author_avatar: avatarOf(m.user_id) })));
+        setResources((res.data || []).map((r) => ({ ...r, author_name: nameOf(r.user_id) })));
       } catch (err) {
         console.error("[group] unexpected load error", err);
       } finally {
@@ -151,8 +166,8 @@ function GroupDetailPage() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "study_group_messages", filter: `group_id=eq.${groupId}` },
         async (payload) => {
           const m = payload.new as Message;
-          const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", m.user_id).maybeSingle();
-          setMessages((prev) => prev.some((x) => x.id === m.id) ? prev : [...prev, { ...m, author_name: prof?.full_name || "Anonymous" }]);
+          const { data: prof } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", m.user_id).maybeSingle();
+          setMessages((prev) => prev.some((x) => x.id === m.id) ? prev : [...prev, { ...m, author_name: prof?.full_name || "Member", author_avatar: prof?.avatar_url || null }]);
         })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "study_group_messages", filter: `group_id=eq.${groupId}` },
         (payload) => setMessages((prev) => prev.filter((m) => m.id !== (payload.old as { id: string }).id)))
@@ -160,15 +175,15 @@ function GroupDetailPage() {
         async (payload) => {
           const r = payload.new as Resource;
           const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", r.user_id).maybeSingle();
-          setResources((prev) => prev.some((x) => x.id === r.id) ? prev : [{ ...r, author_name: prof?.full_name || "Anonymous" }, ...prev]);
+          setResources((prev) => prev.some((x) => x.id === r.id) ? prev : [{ ...r, author_name: prof?.full_name || "Member" }, ...prev]);
         })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "study_group_resources", filter: `group_id=eq.${groupId}` },
         (payload) => setResources((prev) => prev.filter((r) => r.id !== (payload.old as { id: string }).id)))
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "study_group_members", filter: `group_id=eq.${groupId}` },
         async (payload) => {
           const m = payload.new as Member;
-          const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", m.user_id).maybeSingle();
-          setMembers((prev) => prev.some((x) => x.user_id === m.user_id) ? prev : [...prev, { ...m, full_name: prof?.full_name || "Anonymous" }]);
+          const { data: prof } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", m.user_id).maybeSingle();
+          setMembers((prev) => prev.some((x) => x.user_id === m.user_id) ? prev : [...prev, { ...m, full_name: prof?.full_name || "Member", avatar_url: prof?.avatar_url || null }]);
         })
       .subscribe();
 
@@ -198,7 +213,8 @@ function GroupDetailPage() {
         const s = stats.get(m.user_id) || { total: 0, correct: 0 };
         return {
           user_id: m.user_id,
-          full_name: m.full_name || "Anonymous",
+          full_name: m.full_name || "Member",
+          avatar_url: m.avatar_url || null,
           total_questions: s.total,
           correct: s.correct,
           accuracy: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0,
@@ -442,8 +458,12 @@ function GroupDetailPage() {
                       className={`flex w-full min-w-0 gap-2 md:gap-3 ${isMe ? "justify-end" : "justify-start"}`}
                     >
                       {!isMe && (
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent text-xs font-semibold">
-                          {(m.author_name || "A").charAt(0).toUpperCase()}
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent text-xs font-semibold overflow-hidden">
+                          {m.author_avatar ? (
+                            <img src={m.author_avatar} alt={m.author_name || "Member"} className="h-full w-full object-cover" />
+                          ) : (
+                            (m.author_name || "M").charAt(0).toUpperCase()
+                          )}
                         </div>
                       )}
                       <div className={`max-w-[75%] min-w-0 flex flex-col ${isMe ? "items-end" : "items-start"}`}>
@@ -576,8 +596,12 @@ function GroupDetailPage() {
                       <div className="flex h-8 w-8 items-center justify-center font-semibold text-sm">
                         {medal || `#${idx + 1}`}
                       </div>
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold">
-                        {row.full_name.charAt(0).toUpperCase()}
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold overflow-hidden">
+                        {row.avatar_url ? (
+                          <img src={row.avatar_url} alt={row.full_name} className="h-full w-full object-cover" />
+                        ) : (
+                          row.full_name.charAt(0).toUpperCase()
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{isMe ? `${row.full_name} (you)` : row.full_name}</p>
@@ -604,8 +628,12 @@ function GroupDetailPage() {
                 const canManage = isOwner && !isMemberOwner;
                 return (
                   <div key={m.user_id} className="flex flex-wrap items-center gap-3 rounded-xl px-3 py-2 hover:bg-muted/30">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold">
-                      {(m.full_name || "A").charAt(0).toUpperCase()}
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold overflow-hidden">
+                      {m.avatar_url ? (
+                        <img src={m.avatar_url} alt={m.full_name || "Member"} className="h-full w-full object-cover" />
+                      ) : (
+                        (m.full_name || "M").charAt(0).toUpperCase()
+                      )}
                     </div>
                     <div className="flex-1 min-w-[150px]">
                       <p className="font-medium truncate">{m.full_name}{isMe && " (you)"}</p>
