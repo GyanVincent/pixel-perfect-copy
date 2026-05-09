@@ -42,9 +42,11 @@ function PracticePage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [answers, setAnswers] = useState<Array<{ questionId: string; selected: number; correct: boolean }>>([]);
+  const [answers, setAnswers] = useState<Array<{ questionId: string; selected: number; correct: boolean; note?: string }>>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState(10);
+  const [userNotes, setUserNotes] = useState<Record<string, string>>({});
+  const [sessionStartedAt, setSessionStartedAt] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) navigate({ to: "/login" });
@@ -57,6 +59,13 @@ function PracticePage() {
     });
   }, [subjectId, selectedSubject]);
 
+  // Auto-dismiss the "session started" banner after 4s
+  useEffect(() => {
+    if (!sessionStartedAt) return;
+    const t = setTimeout(() => setSessionStartedAt(null), 4000);
+    return () => clearTimeout(t);
+  }, [sessionStartedAt]);
+
   const startSession = useCallback(async () => {
     if (!user || !selectedSubject) return;
 
@@ -68,6 +77,8 @@ function PracticePage() {
     setSelectedAnswer(null);
     setCurrentIndex(0);
     setSessionId(null);
+    setUserNotes({});
+    setSessionStartedAt(Date.now());
 
     const { data: qs } = await supabase
       .from("questions")
@@ -95,7 +106,8 @@ function PracticePage() {
     const q = questions[currentIndex];
     const isCorrect = selectedAnswer === q.correct_answer;
 
-    const newAnswer = { questionId: q.id, selected: selectedAnswer, correct: isCorrect };
+    const note = userNotes[q.id]?.trim() || undefined;
+    const newAnswer = { questionId: q.id, selected: selectedAnswer, correct: isCorrect, note };
     setAnswers((prev) => [...prev, newAnswer]);
 
     if (sessionId) {
@@ -109,7 +121,7 @@ function PracticePage() {
     }
 
     setState("review");
-  }, [selectedAnswer, user, questions, currentIndex, sessionId]);
+  }, [selectedAnswer, user, questions, currentIndex, sessionId, userNotes]);
 
   const nextQuestion = useCallback(async () => {
     if (currentIndex + 1 >= questions.length) {
@@ -200,6 +212,17 @@ function PracticePage() {
 
           {(state === "active" || state === "review") && currentQuestion && (
             <motion.div key={`q-${currentIndex}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              {sessionStartedAt && Date.now() - sessionStartedAt < 4000 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="mb-4 flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-4 py-2.5 text-sm font-medium text-success"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  New practice session started — good luck!
+                </motion.div>
+              )}
               {/* Progress bar */}
               <div className="mb-6">
                 <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
@@ -246,6 +269,22 @@ function PracticePage() {
                       </button>
                     );
                   })}
+                </div>
+
+                <div className="mt-5">
+                  <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+                    Your notes / written answer (optional)
+                  </label>
+                  <textarea
+                    value={userNotes[currentQuestion.id] || ""}
+                    onChange={(e) =>
+                      setUserNotes((prev) => ({ ...prev, [currentQuestion.id]: e.target.value }))
+                    }
+                    disabled={state === "review"}
+                    placeholder="Write your reasoning, working, or full-text answer here..."
+                    rows={3}
+                    className="w-full resize-y rounded-xl border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-accent disabled:opacity-70"
+                  />
                 </div>
 
                 {state === "review" && currentQuestion.explanation && (

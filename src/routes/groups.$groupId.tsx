@@ -437,17 +437,22 @@ function GroupDetailPage() {
                 messages.map((m) => {
                   const isMe = m.user_id === user?.id;
                   return (
-                    <div key={m.id} className={`flex w-full min-w-0 gap-2 md:gap-3 ${isMe ? "flex-row-reverse justify-end pr-1" : "pl-1"}`}>
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent text-xs font-semibold">
-                        {(m.author_name || "A").charAt(0).toUpperCase()}
-                      </div>
-                      <div className={`max-w-[75%] min-w-0 ${isMe ? "items-end" : "items-start"} flex flex-col`}>
+                    <div
+                      key={m.id}
+                      className={`flex w-full min-w-0 gap-2 md:gap-3 ${isMe ? "justify-end" : "justify-start"}`}
+                    >
+                      {!isMe && (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent text-xs font-semibold">
+                          {(m.author_name || "A").charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className={`max-w-[75%] min-w-0 flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                         <div className="flex items-center gap-2 mb-0.5 text-xs text-muted-foreground min-w-0">
                           <span className="truncate max-w-[120px]">{isMe ? "You" : m.author_name}</span>
                           <span>·</span>
                           <span className="shrink-0">{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
-                        <div className={`group rounded-2xl px-3 py-2 md:px-4 text-sm max-w-full min-w-0 ${isMe ? "gradient-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
+                        <div className={`group rounded-2xl px-3 py-2 md:px-4 text-sm max-w-full min-w-0 ${isMe ? "gradient-primary text-primary-foreground rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm"}`}>
                           <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{m.content}</p>
                         </div>
                         {(isMe || isOwner) && (
