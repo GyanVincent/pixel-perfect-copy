@@ -42,9 +42,11 @@ function PracticePage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [answers, setAnswers] = useState<Array<{ questionId: string; selected: number; correct: boolean }>>([]);
+  const [answers, setAnswers] = useState<Array<{ questionId: string; selected: number; correct: boolean; note?: string }>>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState(10);
+  const [userNotes, setUserNotes] = useState<Record<string, string>>({});
+  const [sessionStartedAt, setSessionStartedAt] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) navigate({ to: "/login" });
