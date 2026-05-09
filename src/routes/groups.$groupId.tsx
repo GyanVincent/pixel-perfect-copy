@@ -458,8 +458,12 @@ function GroupDetailPage() {
                       className={`flex w-full min-w-0 gap-2 md:gap-3 ${isMe ? "justify-end" : "justify-start"}`}
                     >
                       {!isMe && (
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent text-xs font-semibold">
-                          {(m.author_name || "A").charAt(0).toUpperCase()}
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent text-xs font-semibold overflow-hidden">
+                          {m.author_avatar ? (
+                            <img src={m.author_avatar} alt={m.author_name || "Member"} className="h-full w-full object-cover" />
+                          ) : (
+                            (m.author_name || "M").charAt(0).toUpperCase()
+                          )}
                         </div>
                       )}
                       <div className={`max-w-[75%] min-w-0 flex flex-col ${isMe ? "items-end" : "items-start"}`}>
