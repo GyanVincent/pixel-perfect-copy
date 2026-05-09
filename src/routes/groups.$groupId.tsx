@@ -166,8 +166,8 @@ function GroupDetailPage() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "study_group_messages", filter: `group_id=eq.${groupId}` },
         async (payload) => {
           const m = payload.new as Message;
-          const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", m.user_id).maybeSingle();
-          setMessages((prev) => prev.some((x) => x.id === m.id) ? prev : [...prev, { ...m, author_name: prof?.full_name || "Anonymous" }]);
+          const { data: prof } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", m.user_id).maybeSingle();
+          setMessages((prev) => prev.some((x) => x.id === m.id) ? prev : [...prev, { ...m, author_name: prof?.full_name || "Member", author_avatar: prof?.avatar_url || null }]);
         })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "study_group_messages", filter: `group_id=eq.${groupId}` },
         (payload) => setMessages((prev) => prev.filter((m) => m.id !== (payload.old as { id: string }).id)))
@@ -175,15 +175,15 @@ function GroupDetailPage() {
         async (payload) => {
           const r = payload.new as Resource;
           const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", r.user_id).maybeSingle();
-          setResources((prev) => prev.some((x) => x.id === r.id) ? prev : [{ ...r, author_name: prof?.full_name || "Anonymous" }, ...prev]);
+          setResources((prev) => prev.some((x) => x.id === r.id) ? prev : [{ ...r, author_name: prof?.full_name || "Member" }, ...prev]);
         })
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "study_group_resources", filter: `group_id=eq.${groupId}` },
         (payload) => setResources((prev) => prev.filter((r) => r.id !== (payload.old as { id: string }).id)))
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "study_group_members", filter: `group_id=eq.${groupId}` },
         async (payload) => {
           const m = payload.new as Member;
-          const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", m.user_id).maybeSingle();
-          setMembers((prev) => prev.some((x) => x.user_id === m.user_id) ? prev : [...prev, { ...m, full_name: prof?.full_name || "Anonymous" }]);
+          const { data: prof } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", m.user_id).maybeSingle();
+          setMembers((prev) => prev.some((x) => x.user_id === m.user_id) ? prev : [...prev, { ...m, full_name: prof?.full_name || "Member", avatar_url: prof?.avatar_url || null }]);
         })
       .subscribe();
 
