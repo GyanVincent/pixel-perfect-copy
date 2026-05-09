@@ -99,7 +99,8 @@ function PracticePage() {
     const q = questions[currentIndex];
     const isCorrect = selectedAnswer === q.correct_answer;
 
-    const newAnswer = { questionId: q.id, selected: selectedAnswer, correct: isCorrect };
+    const note = userNotes[q.id]?.trim() || undefined;
+    const newAnswer = { questionId: q.id, selected: selectedAnswer, correct: isCorrect, note };
     setAnswers((prev) => [...prev, newAnswer]);
 
     if (sessionId) {
