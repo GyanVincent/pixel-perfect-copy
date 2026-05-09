@@ -70,6 +70,8 @@ function PracticePage() {
     setSelectedAnswer(null);
     setCurrentIndex(0);
     setSessionId(null);
+    setUserNotes({});
+    setSessionStartedAt(Date.now());
 
     const { data: qs } = await supabase
       .from("questions")
