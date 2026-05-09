@@ -59,6 +59,13 @@ function PracticePage() {
     });
   }, [subjectId, selectedSubject]);
 
+  // Auto-dismiss the "session started" banner after 4s
+  useEffect(() => {
+    if (!sessionStartedAt) return;
+    const t = setTimeout(() => setSessionStartedAt(null), 4000);
+    return () => clearTimeout(t);
+  }, [sessionStartedAt]);
+
   const startSession = useCallback(async () => {
     if (!user || !selectedSubject) return;
 
