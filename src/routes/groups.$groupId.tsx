@@ -20,12 +20,18 @@ interface GroupInfo {
   subjects: { id: string; name: string; code: string } | null;
 }
 
+interface Profile {
+  name: string;
+  avatar: string | null;
+}
+
 interface Message {
   id: string;
   user_id: string;
   content: string;
   created_at: string;
   author_name?: string;
+  author_avatar?: string | null;
 }
 
 interface Member {
@@ -33,6 +39,7 @@ interface Member {
   role: string;
   joined_at: string;
   full_name?: string;
+  avatar_url?: string | null;
 }
 
 interface Resource {
@@ -48,6 +55,7 @@ interface Resource {
 interface LeaderRow {
   user_id: string;
   full_name: string;
+  avatar_url: string | null;
   total_questions: number;
   correct: number;
   accuracy: number;
