@@ -596,8 +596,12 @@ function GroupDetailPage() {
                       <div className="flex h-8 w-8 items-center justify-center font-semibold text-sm">
                         {medal || `#${idx + 1}`}
                       </div>
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold">
-                        {row.full_name.charAt(0).toUpperCase()}
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold overflow-hidden">
+                        {row.avatar_url ? (
+                          <img src={row.avatar_url} alt={row.full_name} className="h-full w-full object-cover" />
+                        ) : (
+                          row.full_name.charAt(0).toUpperCase()
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{isMe ? `${row.full_name} (you)` : row.full_name}</p>
