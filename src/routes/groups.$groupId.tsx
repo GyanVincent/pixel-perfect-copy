@@ -628,8 +628,12 @@ function GroupDetailPage() {
                 const canManage = isOwner && !isMemberOwner;
                 return (
                   <div key={m.user_id} className="flex flex-wrap items-center gap-3 rounded-xl px-3 py-2 hover:bg-muted/30">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold">
-                      {(m.full_name || "A").charAt(0).toUpperCase()}
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold overflow-hidden">
+                      {m.avatar_url ? (
+                        <img src={m.avatar_url} alt={m.full_name || "Member"} className="h-full w-full object-cover" />
+                      ) : (
+                        (m.full_name || "M").charAt(0).toUpperCase()
+                      )}
                     </div>
                     <div className="flex-1 min-w-[150px]">
                       <p className="font-medium truncate">{m.full_name}{isMe && " (you)"}</p>
