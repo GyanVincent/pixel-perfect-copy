@@ -213,7 +213,8 @@ function GroupDetailPage() {
         const s = stats.get(m.user_id) || { total: 0, correct: 0 };
         return {
           user_id: m.user_id,
-          full_name: m.full_name || "Anonymous",
+          full_name: m.full_name || "Member",
+          avatar_url: m.avatar_url || null,
           total_questions: s.total,
           correct: s.correct,
           accuracy: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0,
