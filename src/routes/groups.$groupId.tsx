@@ -127,19 +127,26 @@ function GroupDetailPage() {
           ...(res.data || []).map((r) => r.user_id),
         ]));
 
-        const profileMap = new Map<string, string>();
+        const profileMap = new Map<string, Profile>();
         if (userIds.length > 0) {
           const { data: profs } = await supabase
             .from("profiles")
-            .select("user_id, full_name")
+            .select("user_id, full_name, avatar_url")
             .in("user_id", userIds);
-          (profs || []).forEach((p) => profileMap.set(p.user_id, p.full_name || "Anonymous"));
+          (profs || []).forEach((p) =>
+            profileMap.set(p.user_id, {
+              name: (p.full_name && p.full_name.trim()) || "Member",
+              avatar: p.avatar_url || null,
+            })
+          );
         }
+        const nameOf = (uid: string) => profileMap.get(uid)?.name || "Member";
+        const avatarOf = (uid: string) => profileMap.get(uid)?.avatar || null;
 
         if (cancelled) return;
-        setMembers((mems.data || []).map((m) => ({ ...m, full_name: profileMap.get(m.user_id) || "Anonymous" })));
-        setMessages((msgs.data || []).map((m) => ({ ...m, author_name: profileMap.get(m.user_id) || "Anonymous" })));
-        setResources((res.data || []).map((r) => ({ ...r, author_name: profileMap.get(r.user_id) || "Anonymous" })));
+        setMembers((mems.data || []).map((m) => ({ ...m, full_name: nameOf(m.user_id), avatar_url: avatarOf(m.user_id) })));
+        setMessages((msgs.data || []).map((m) => ({ ...m, author_name: nameOf(m.user_id), author_avatar: avatarOf(m.user_id) })));
+        setResources((res.data || []).map((r) => ({ ...r, author_name: nameOf(r.user_id) })));
       } catch (err) {
         console.error("[group] unexpected load error", err);
       } finally {
