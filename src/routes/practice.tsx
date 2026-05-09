@@ -114,7 +114,7 @@ function PracticePage() {
     }
 
     setState("review");
-  }, [selectedAnswer, user, questions, currentIndex, sessionId]);
+  }, [selectedAnswer, user, questions, currentIndex, sessionId, userNotes]);
 
   const nextQuestion = useCallback(async () => {
     if (currentIndex + 1 >= questions.length) {
