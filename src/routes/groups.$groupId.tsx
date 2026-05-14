@@ -121,7 +121,7 @@ function GroupDetailPage() {
         const [mems, msgs, res] = await Promise.all([
           supabase.from("study_group_members").select("user_id, role, joined_at").eq("group_id", groupId),
           supabase.from("study_group_messages").select("id, user_id, content, created_at").eq("group_id", groupId).order("created_at", { ascending: true }).limit(200),
-          supabase.from("study_group_resources").select("id, user_id, title, url, notes, created_at").eq("group_id", groupId).order("created_at", { ascending: false }),
+          supabase.from("study_group_resources").select("id, user_id, title, url, notes, created_at, file_path, file_name, file_type, file_size").eq("group_id", groupId).order("created_at", { ascending: false }),
         ]);
 
         if (cancelled) return;
