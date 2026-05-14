@@ -84,7 +84,11 @@ function GroupDetailPage() {
   const [resTitle, setResTitle] = useState("");
   const [resUrl, setResUrl] = useState("");
   const [resNotes, setResNotes] = useState("");
+  const [resFile, setResFile] = useState<File | null>(null);
+  const [uploadingRes, setUploadingRes] = useState(false);
   const [showResForm, setShowResForm] = useState(false);
+  const [resSearch, setResSearch] = useState("");
+  const resFileRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
