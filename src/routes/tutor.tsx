@@ -323,7 +323,6 @@ function TutorPage() {
           .select("id")
           .single();
         if (conv) {
-          setConversationId(conv.id);
           await supabase.from("tutor_messages").insert({
             conversation_id: conv.id,
             user_id: user.id,
@@ -331,6 +330,12 @@ function TutorPage() {
             content: newMsg.content,
             image_url: data.imageUrl,
           });
+          // Mark this conv id as already-loaded BEFORE setting it, so the
+          // load-messages effect doesn't re-fetch and wipe the image we
+          // just appended to local state (mobile networks make the race
+          // especially bad).
+          loadedConvIdRef.current = conv.id;
+          setConversationId(conv.id);
           void refreshConversations();
         }
       }
