@@ -326,6 +326,10 @@ export type Database = {
       study_group_resources: {
         Row: {
           created_at: string
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
           group_id: string
           id: string
           notes: string | null
@@ -335,6 +339,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
           group_id: string
           id?: string
           notes?: string | null
@@ -344,6 +352,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
           group_id?: string
           id?: string
           notes?: string | null
