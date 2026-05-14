@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Users, MessageSquare, BookMarked, Trophy, Send, Hash, Copy, Check, ArrowLeft, ExternalLink, Trash2, Play, Plus } from "lucide-react";
+import { Users, MessageSquare, BookMarked, Trophy, Send, Hash, Copy, Check, ArrowLeft, ExternalLink, Trash2, Play, Plus, Search, Paperclip, FileText, FileImage, FileAudio, FileVideo, File as FileIcon, Download, Loader2 } from "lucide-react";
 import { markGroupRead } from "@/hooks/use-unread-groups";
 
 export const Route = createFileRoute("/groups/$groupId")({
