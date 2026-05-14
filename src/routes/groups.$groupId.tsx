@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Users, MessageSquare, BookMarked, Trophy, Send, Hash, Copy, Check, ArrowLeft, ExternalLink, Trash2, Play, Plus } from "lucide-react";
+import { Users, MessageSquare, BookMarked, Trophy, Send, Hash, Copy, Check, ArrowLeft, ExternalLink, Trash2, Play, Plus, Search, Paperclip, FileText, FileImage, FileAudio, FileVideo, File as FileIcon, Download, Loader2 } from "lucide-react";
 import { markGroupRead } from "@/hooks/use-unread-groups";
 
 export const Route = createFileRoute("/groups/$groupId")({
@@ -49,6 +49,10 @@ interface Resource {
   url: string | null;
   notes: string | null;
   created_at: string;
+  file_path?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
+  file_size?: number | null;
   author_name?: string;
 }
 
@@ -80,7 +84,11 @@ function GroupDetailPage() {
   const [resTitle, setResTitle] = useState("");
   const [resUrl, setResUrl] = useState("");
   const [resNotes, setResNotes] = useState("");
+  const [resFile, setResFile] = useState<File | null>(null);
+  const [uploadingRes, setUploadingRes] = useState(false);
   const [showResForm, setShowResForm] = useState(false);
+  const [resSearch, setResSearch] = useState("");
+  const resFileRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -113,7 +121,7 @@ function GroupDetailPage() {
         const [mems, msgs, res] = await Promise.all([
           supabase.from("study_group_members").select("user_id, role, joined_at").eq("group_id", groupId),
           supabase.from("study_group_messages").select("id, user_id, content, created_at").eq("group_id", groupId).order("created_at", { ascending: true }).limit(200),
-          supabase.from("study_group_resources").select("id, user_id, title, url, notes, created_at").eq("group_id", groupId).order("created_at", { ascending: false }),
+          supabase.from("study_group_resources").select("id, user_id, title, url, notes, created_at, file_path, file_name, file_type, file_size").eq("group_id", groupId).order("created_at", { ascending: false }),
         ]);
 
         if (cancelled) return;
@@ -252,21 +260,96 @@ function GroupDetailPage() {
   const addResource = async (e: FormEvent) => {
     e.preventDefault();
     if (!user || !resTitle.trim()) return;
-    await supabase.from("study_group_resources").insert({
-      group_id: groupId,
-      user_id: user.id,
-      title: resTitle.trim(),
-      url: resUrl.trim() || null,
-      notes: resNotes.trim() || null,
-    });
-    setResTitle("");
-    setResUrl("");
-    setResNotes("");
-    setShowResForm(false);
+    setUploadingRes(true);
+    try {
+      let file_path: string | null = null;
+      let file_name: string | null = null;
+      let file_type: string | null = null;
+      let file_size: number | null = null;
+      if (resFile) {
+        if (resFile.size > 50 * 1024 * 1024) {
+          alert("File must be under 50MB");
+          setUploadingRes(false);
+          return;
+        }
+        const safe = resFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${groupId}/${user.id}/${Date.now()}-${safe}`;
+        const { error: upErr } = await supabase.storage
+          .from("group-files")
+          .upload(path, resFile, { cacheControl: "3600", upsert: false });
+        if (upErr) {
+          console.error("[group] file upload error", upErr);
+          alert("Could not upload file.");
+          setUploadingRes(false);
+          return;
+        }
+        file_path = path;
+        file_name = resFile.name;
+        file_type = resFile.type || null;
+        file_size = resFile.size;
+      }
+      await supabase.from("study_group_resources").insert({
+        group_id: groupId,
+        user_id: user.id,
+        title: resTitle.trim(),
+        url: resUrl.trim() || null,
+        notes: resNotes.trim() || null,
+        file_path,
+        file_name,
+        file_type,
+        file_size,
+      });
+      setResTitle("");
+      setResUrl("");
+      setResNotes("");
+      setResFile(null);
+      if (resFileRef.current) resFileRef.current.value = "";
+      setShowResForm(false);
+    } finally {
+      setUploadingRes(false);
+    }
   };
 
-  const deleteResource = async (id: string) => {
-    await supabase.from("study_group_resources").delete().eq("id", id);
+  const deleteResource = async (r: Resource) => {
+    if (r.file_path) {
+      await supabase.storage.from("group-files").remove([r.file_path]);
+    }
+    await supabase.from("study_group_resources").delete().eq("id", r.id);
+  };
+
+  const downloadFile = async (r: Resource) => {
+    if (!r.file_path) return;
+    const { data, error } = await supabase.storage
+      .from("group-files")
+      .createSignedUrl(r.file_path, 60, { download: r.file_name || true });
+    if (error || !data?.signedUrl) {
+      console.error("[group] signed url error", error);
+      alert("Could not download file.");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.rel = "noopener noreferrer";
+    a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  const fileKindIcon = (type: string | null | undefined) => {
+    const t = (type || "").toLowerCase();
+    if (t.startsWith("image/")) return FileImage;
+    if (t.startsWith("audio/")) return FileAudio;
+    if (t.startsWith("video/")) return FileVideo;
+    if (t.includes("pdf") || t.includes("word") || t.includes("text") || t.includes("sheet") || t.includes("presentation")) return FileText;
+    return FileIcon;
+  };
+
+  const formatBytes = (n: number | null | undefined) => {
+    if (!n) return "";
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const removeMember = async (memberId: string, name: string) => {
@@ -504,7 +587,16 @@ function GroupDetailPage() {
 
         {tab === "resources" && (
           <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  value={resSearch}
+                  onChange={(e) => setResSearch(e.target.value)}
+                  placeholder="Search files, documents, audio, video, images..."
+                  className="w-full rounded-xl border border-input bg-background pl-10 pr-3 py-2.5 text-sm outline-none focus:border-accent"
+                />
+              </div>
               <button
                 onClick={() => setShowResForm(!showResForm)}
                 className="flex items-center gap-2 rounded-xl gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
@@ -539,46 +631,103 @@ function GroupDetailPage() {
                   rows={3}
                   className="w-full rounded-xl border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-accent resize-none"
                 />
+                <div>
+                  <input
+                    ref={resFileRef}
+                    type="file"
+                    accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.zip"
+                    onChange={(e) => setResFile(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => resFileRef.current?.click()}
+                    className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm hover:bg-muted"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    {resFile ? `${resFile.name} (${formatBytes(resFile.size)})` : "Attach file (max 50MB)"}
+                  </button>
+                  {resFile && (
+                    <button
+                      type="button"
+                      onClick={() => { setResFile(null); if (resFileRef.current) resFileRef.current.value = ""; }}
+                      className="ml-2 text-xs text-muted-foreground hover:text-destructive"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
                 <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => setShowResForm(false)} className="rounded-xl px-4 py-2 text-sm hover:bg-muted">Cancel</button>
-                  <button type="submit" className="rounded-xl gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Save</button>
+                  <button type="submit" disabled={uploadingRes} className="flex items-center gap-2 rounded-xl gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                    {uploadingRes && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {uploadingRes ? "Uploading..." : "Save"}
+                  </button>
                 </div>
               </form>
             )}
 
-            {resources.length === 0 ? (
-              <div className="stat-card text-center py-12 text-muted-foreground">
-                <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                <p>No resources shared yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {resources.map((r) => (
-                  <div key={r.id} className="stat-card">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold mb-1">{r.title}</h3>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Shared by {r.user_id === user?.id ? "you" : r.author_name} · {new Date(r.created_at).toLocaleDateString()}
-                        </p>
-                        {r.url && (
-                          <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline mb-2">
-                            <ExternalLink className="h-3.5 w-3.5" />
-                            {r.url}
-                          </a>
-                        )}
-                        {r.notes && <p className="text-sm text-muted-foreground whitespace-pre-wrap">{r.notes}</p>}
-                      </div>
-                      {(r.user_id === user?.id || isOwner) && (
-                        <button onClick={() => deleteResource(r.id)} className="text-muted-foreground hover:text-destructive p-1">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
+            {(() => {
+              const q = resSearch.trim().toLowerCase();
+              const filtered = q
+                ? resources.filter((r) =>
+                    [r.title, r.notes || "", r.url || "", r.file_name || "", r.file_type || "", r.author_name || ""]
+                      .join(" ")
+                      .toLowerCase()
+                      .includes(q),
+                  )
+                : resources;
+              if (filtered.length === 0) {
+                return (
+                  <div className="stat-card text-center py-12 text-muted-foreground">
+                    <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                    <p>{q ? "No resources match your search." : "No resources shared yet."}</p>
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              }
+              return (
+                <div className="space-y-3">
+                  {filtered.map((r) => {
+                    const Icon = fileKindIcon(r.file_type);
+                    return (
+                      <div key={r.id} className="stat-card">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold mb-1">{r.title}</h3>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Shared by {r.user_id === user?.id ? "you" : r.author_name} · {new Date(r.created_at).toLocaleDateString()}
+                            </p>
+                            {r.url && (
+                              <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline mb-2">
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                {r.url}
+                              </a>
+                            )}
+                            {r.file_path && (
+                              <button
+                                onClick={() => downloadFile(r)}
+                                className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm hover:bg-muted mb-2 max-w-full"
+                              >
+                                <Icon className="h-4 w-4 text-accent shrink-0" />
+                                <span className="truncate">{r.file_name}</span>
+                                <span className="text-xs text-muted-foreground shrink-0">{formatBytes(r.file_size)}</span>
+                                <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              </button>
+                            )}
+                            {r.notes && <p className="text-sm text-muted-foreground whitespace-pre-wrap">{r.notes}</p>}
+                          </div>
+                          {(r.user_id === user?.id || isOwner) && (
+                            <button onClick={() => deleteResource(r)} className="text-muted-foreground hover:text-destructive p-1">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         )}
 
