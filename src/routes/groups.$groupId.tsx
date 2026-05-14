@@ -260,21 +260,96 @@ function GroupDetailPage() {
   const addResource = async (e: FormEvent) => {
     e.preventDefault();
     if (!user || !resTitle.trim()) return;
-    await supabase.from("study_group_resources").insert({
-      group_id: groupId,
-      user_id: user.id,
-      title: resTitle.trim(),
-      url: resUrl.trim() || null,
-      notes: resNotes.trim() || null,
-    });
-    setResTitle("");
-    setResUrl("");
-    setResNotes("");
-    setShowResForm(false);
+    setUploadingRes(true);
+    try {
+      let file_path: string | null = null;
+      let file_name: string | null = null;
+      let file_type: string | null = null;
+      let file_size: number | null = null;
+      if (resFile) {
+        if (resFile.size > 50 * 1024 * 1024) {
+          alert("File must be under 50MB");
+          setUploadingRes(false);
+          return;
+        }
+        const safe = resFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${groupId}/${user.id}/${Date.now()}-${safe}`;
+        const { error: upErr } = await supabase.storage
+          .from("group-files")
+          .upload(path, resFile, { cacheControl: "3600", upsert: false });
+        if (upErr) {
+          console.error("[group] file upload error", upErr);
+          alert("Could not upload file.");
+          setUploadingRes(false);
+          return;
+        }
+        file_path = path;
+        file_name = resFile.name;
+        file_type = resFile.type || null;
+        file_size = resFile.size;
+      }
+      await supabase.from("study_group_resources").insert({
+        group_id: groupId,
+        user_id: user.id,
+        title: resTitle.trim(),
+        url: resUrl.trim() || null,
+        notes: resNotes.trim() || null,
+        file_path,
+        file_name,
+        file_type,
+        file_size,
+      });
+      setResTitle("");
+      setResUrl("");
+      setResNotes("");
+      setResFile(null);
+      if (resFileRef.current) resFileRef.current.value = "";
+      setShowResForm(false);
+    } finally {
+      setUploadingRes(false);
+    }
   };
 
-  const deleteResource = async (id: string) => {
-    await supabase.from("study_group_resources").delete().eq("id", id);
+  const deleteResource = async (r: Resource) => {
+    if (r.file_path) {
+      await supabase.storage.from("group-files").remove([r.file_path]);
+    }
+    await supabase.from("study_group_resources").delete().eq("id", r.id);
+  };
+
+  const downloadFile = async (r: Resource) => {
+    if (!r.file_path) return;
+    const { data, error } = await supabase.storage
+      .from("group-files")
+      .createSignedUrl(r.file_path, 60, { download: r.file_name || true });
+    if (error || !data?.signedUrl) {
+      console.error("[group] signed url error", error);
+      alert("Could not download file.");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.rel = "noopener noreferrer";
+    a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  const fileKindIcon = (type: string | null | undefined) => {
+    const t = (type || "").toLowerCase();
+    if (t.startsWith("image/")) return FileImage;
+    if (t.startsWith("audio/")) return FileAudio;
+    if (t.startsWith("video/")) return FileVideo;
+    if (t.includes("pdf") || t.includes("word") || t.includes("text") || t.includes("sheet") || t.includes("presentation")) return FileText;
+    return FileIcon;
+  };
+
+  const formatBytes = (n: number | null | undefined) => {
+    if (!n) return "";
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const removeMember = async (memberId: string, name: string) => {
