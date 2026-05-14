@@ -49,6 +49,10 @@ interface Resource {
   url: string | null;
   notes: string | null;
   created_at: string;
+  file_path?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
+  file_size?: number | null;
   author_name?: string;
 }
 
