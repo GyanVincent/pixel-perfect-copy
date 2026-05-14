@@ -587,7 +587,16 @@ function GroupDetailPage() {
 
         {tab === "resources" && (
           <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  value={resSearch}
+                  onChange={(e) => setResSearch(e.target.value)}
+                  placeholder="Search files, documents, audio, video, images..."
+                  className="w-full rounded-xl border border-input bg-background pl-10 pr-3 py-2.5 text-sm outline-none focus:border-accent"
+                />
+              </div>
               <button
                 onClick={() => setShowResForm(!showResForm)}
                 className="flex items-center gap-2 rounded-xl gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
@@ -622,46 +631,103 @@ function GroupDetailPage() {
                   rows={3}
                   className="w-full rounded-xl border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-accent resize-none"
                 />
+                <div>
+                  <input
+                    ref={resFileRef}
+                    type="file"
+                    accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.zip"
+                    onChange={(e) => setResFile(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => resFileRef.current?.click()}
+                    className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm hover:bg-muted"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    {resFile ? `${resFile.name} (${formatBytes(resFile.size)})` : "Attach file (max 50MB)"}
+                  </button>
+                  {resFile && (
+                    <button
+                      type="button"
+                      onClick={() => { setResFile(null); if (resFileRef.current) resFileRef.current.value = ""; }}
+                      className="ml-2 text-xs text-muted-foreground hover:text-destructive"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
                 <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => setShowResForm(false)} className="rounded-xl px-4 py-2 text-sm hover:bg-muted">Cancel</button>
-                  <button type="submit" className="rounded-xl gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Save</button>
+                  <button type="submit" disabled={uploadingRes} className="flex items-center gap-2 rounded-xl gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                    {uploadingRes && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {uploadingRes ? "Uploading..." : "Save"}
+                  </button>
                 </div>
               </form>
             )}
 
-            {resources.length === 0 ? (
-              <div className="stat-card text-center py-12 text-muted-foreground">
-                <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                <p>No resources shared yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {resources.map((r) => (
-                  <div key={r.id} className="stat-card">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold mb-1">{r.title}</h3>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Shared by {r.user_id === user?.id ? "you" : r.author_name} · {new Date(r.created_at).toLocaleDateString()}
-                        </p>
-                        {r.url && (
-                          <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline mb-2">
-                            <ExternalLink className="h-3.5 w-3.5" />
-                            {r.url}
-                          </a>
-                        )}
-                        {r.notes && <p className="text-sm text-muted-foreground whitespace-pre-wrap">{r.notes}</p>}
-                      </div>
-                      {(r.user_id === user?.id || isOwner) && (
-                        <button onClick={() => deleteResource(r.id)} className="text-muted-foreground hover:text-destructive p-1">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
+            {(() => {
+              const q = resSearch.trim().toLowerCase();
+              const filtered = q
+                ? resources.filter((r) =>
+                    [r.title, r.notes || "", r.url || "", r.file_name || "", r.file_type || "", r.author_name || ""]
+                      .join(" ")
+                      .toLowerCase()
+                      .includes(q),
+                  )
+                : resources;
+              if (filtered.length === 0) {
+                return (
+                  <div className="stat-card text-center py-12 text-muted-foreground">
+                    <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                    <p>{q ? "No resources match your search." : "No resources shared yet."}</p>
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              }
+              return (
+                <div className="space-y-3">
+                  {filtered.map((r) => {
+                    const Icon = fileKindIcon(r.file_type);
+                    return (
+                      <div key={r.id} className="stat-card">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold mb-1">{r.title}</h3>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Shared by {r.user_id === user?.id ? "you" : r.author_name} · {new Date(r.created_at).toLocaleDateString()}
+                            </p>
+                            {r.url && (
+                              <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline mb-2">
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                {r.url}
+                              </a>
+                            )}
+                            {r.file_path && (
+                              <button
+                                onClick={() => downloadFile(r)}
+                                className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm hover:bg-muted mb-2 max-w-full"
+                              >
+                                <Icon className="h-4 w-4 text-accent shrink-0" />
+                                <span className="truncate">{r.file_name}</span>
+                                <span className="text-xs text-muted-foreground shrink-0">{formatBytes(r.file_size)}</span>
+                                <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              </button>
+                            )}
+                            {r.notes && <p className="text-sm text-muted-foreground whitespace-pre-wrap">{r.notes}</p>}
+                          </div>
+                          {(r.user_id === user?.id || isOwner) && (
+                            <button onClick={() => deleteResource(r)} className="text-muted-foreground hover:text-destructive p-1">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         )}
 
