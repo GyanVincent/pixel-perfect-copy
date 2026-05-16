@@ -114,14 +114,14 @@ export const Route = createFileRoute("/api/ai-chat")({
             }
           }
 
-          const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const upstream = await fetch(aiConfig.chatUrl, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              Authorization: `Bearer ${aiConfig.apiKey}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "google/gemini-3-flash-preview",
+              model: aiConfig.textModel,
               messages: [{ role: "system", content: systemPrompt }, ...messages],
               stream: true,
             }),
