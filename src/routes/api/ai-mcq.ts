@@ -21,25 +21,30 @@ export const Route = createFileRoute("/api/ai-mcq")({
             ? exclude.filter((s) => typeof s === "string").slice(0, 30)
             : [];
 
-          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
-          if (!LOVABLE_API_KEY) {
-            return new Response(JSON.stringify({ error: "AI service not configured" }), {
-              status: 500, headers: { "Content-Type": "application/json" },
-            });
+          let aiConfig;
+          try {
+            aiConfig = getAIConfig();
+          } catch (e) {
+            if (e instanceof AIConfigError) {
+              return new Response(JSON.stringify({ error: e.message }), {
+                status: e.status, headers: { "Content-Type": "application/json" },
+              });
+            }
+            throw e;
           }
           const userPrompt =
             `Generate ${n} ${diff} multiple-choice questions about: ${topic}` +
             (excludeList.length
               ? `\n\nDo NOT repeat or paraphrase any of these previously-asked questions:\n- ${excludeList.join("\n- ")}\n\nCover different angles, sub-topics, or difficulty nuances.`
               : "");
-          const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const upstream = await fetch(aiConfig.chatUrl, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              Authorization: `Bearer ${aiConfig.apiKey}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "google/gemini-3-flash-preview",
+              model: aiConfig.textModel,
               messages: [
                 { role: "system", content: SYSTEM },
                 { role: "user", content: userPrompt },
