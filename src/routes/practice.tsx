@@ -427,15 +427,15 @@ function PracticePage() {
                 <div className="flex items-center justify-center gap-3">
                   <button
                     onClick={() => {
-                      setState("setup");
-                      setQuestions([]);
                       setAnswers([]);
                       setSessionId(null);
+                      startSession();
                     }}
-                    className="flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-medium hover:bg-muted transition-all"
+                    disabled={generating}
+                    className="flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-medium hover:bg-muted transition-all disabled:opacity-50"
                   >
                     <RotateCcw className="h-4 w-4" />
-                    Practice Again
+                    {generating ? "Generating..." : "Try Again (Fresh Questions)"}
                   </button>
                   <button
                     onClick={() => navigate({ to: "/dashboard" })}
