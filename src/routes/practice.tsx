@@ -74,37 +74,60 @@ function PracticePage() {
   const startSession = useCallback(async () => {
     if (!user || !selectedSubject) return;
 
-    // Hard-reset all quiz state BEFORE loading the new set, so re-entering
-    // the same topic doesn't carry over selections, highlights, or
-    // explanations from the previous session.
     setQuestions([]);
     setAnswers([]);
     setSelectedAnswer(null);
     setCurrentIndex(0);
     setSessionId(null);
     setUserNotes({});
-    setSessionStartedAt(Date.now());
+    setGenError(null);
+    setGenerating(true);
 
-    const { data: qs } = await supabase
-      .from("questions")
-      .select("id, question_text, options, correct_answer, explanation, difficulty, topic_id, topics!inner(subject_id)")
-      .eq("topics.subject_id", selectedSubject)
-      .limit(questionCount);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      const resp = await fetch("/api/ai-practice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ subjectId: selectedSubject, count: questionCount, difficulty }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        setGenError(err.error || "Failed to generate questions");
+        setGenerating(false);
+        return;
+      }
+      const { questions: qs } = (await resp.json()) as { questions: Question[] };
+      if (!qs || qs.length === 0) {
+        setGenError("No questions generated. Please try again.");
+        setGenerating(false);
+        return;
+      }
+      setQuestions(qs);
+      setSessionStartedAt(Date.now());
 
-    if (!qs || qs.length === 0) return;
+      const { data: session } = await supabase
+        .from("practice_sessions")
+        .insert({
+          user_id: user.id,
+          subject_id: selectedSubject,
+          group_id: groupId || null,
+          total_questions: qs.length,
+        })
+        .select("id")
+        .single();
 
-    const shuffled = qs.sort(() => Math.random() - 0.5).slice(0, questionCount);
-    setQuestions(shuffled as unknown as Question[]);
-
-    const { data: session } = await supabase
-      .from("practice_sessions")
-      .insert({ user_id: user.id, subject_id: selectedSubject, group_id: groupId || null, total_questions: shuffled.length })
-      .select("id")
-      .single();
-
-    if (session) setSessionId(session.id);
-    setState("active");
-  }, [user, selectedSubject, questionCount, groupId]);
+      if (session) setSessionId(session.id);
+      setState("active");
+    } catch (e) {
+      setGenError(e instanceof Error ? e.message : "Failed to start session");
+    } finally {
+      setGenerating(false);
+    }
+  }, [user, selectedSubject, questionCount, difficulty, groupId]);
 
   const submitAnswer = useCallback(async () => {
     if (selectedAnswer === null || !user) return;
@@ -114,6 +137,12 @@ function PracticePage() {
     const note = userNotes[q.id]?.trim() || undefined;
     const newAnswer = { questionId: q.id, selected: selectedAnswer, correct: isCorrect, note };
     setAnswers((prev) => [...prev, newAnswer]);
+
+    // Record into history so this question is never re-served to this user.
+    await supabase.from("user_question_history").upsert(
+      { user_id: user.id, question_id: q.id, subject_id: selectedSubject || null },
+      { onConflict: "user_id,question_id" },
+    );
 
     if (sessionId) {
       await supabase.from("practice_answers").insert({
@@ -126,7 +155,7 @@ function PracticePage() {
     }
 
     setState("review");
-  }, [selectedAnswer, user, questions, currentIndex, sessionId, userNotes]);
+  }, [selectedAnswer, user, questions, currentIndex, sessionId, userNotes, selectedSubject]);
 
   const nextQuestion = useCallback(async () => {
     if (currentIndex + 1 >= questions.length) {
