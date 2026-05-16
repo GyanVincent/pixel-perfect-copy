@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getAIConfig, AIConfigError } from "@/lib/ai-provider.server";
 
 const BASE_SYSTEM_PROMPT = `You are SmartPrep AI Tutor — a warm, sharp, Socratic university tutor.
 
@@ -66,11 +67,16 @@ export const Route = createFileRoute("/api/ai-chat")({
           const subjectId: string | null = body.subjectId || null;
           const conversationId: string | null = body.conversationId || null;
 
-          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
-          if (!LOVABLE_API_KEY) {
-            return new Response(JSON.stringify({ error: "AI service not configured" }), {
-              status: 500, headers: { "Content-Type": "application/json" },
-            });
+          let aiConfig;
+          try {
+            aiConfig = getAIConfig();
+          } catch (e) {
+            if (e instanceof AIConfigError) {
+              return new Response(JSON.stringify({ error: e.message }), {
+                status: e.status, headers: { "Content-Type": "application/json" },
+              });
+            }
+            throw e;
           }
 
           // Identify the user (for persistence). Validate the bearer token.
@@ -108,14 +114,14 @@ export const Route = createFileRoute("/api/ai-chat")({
             }
           }
 
-          const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const upstream = await fetch(aiConfig.chatUrl, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              Authorization: `Bearer ${aiConfig.apiKey}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "google/gemini-3-flash-preview",
+              model: aiConfig.textModel,
               messages: [{ role: "system", content: systemPrompt }, ...messages],
               stream: true,
             }),
