@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getAIConfig, AIConfigError } from "@/lib/ai-provider.server";
 
 const SYSTEM = `You generate high-quality multiple-choice practice questions for university CS / STEM courses.
 Each question must have exactly 4 options, exactly one correct answer, and a concise explanation that teaches the underlying concept.`;
