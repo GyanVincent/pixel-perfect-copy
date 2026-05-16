@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      generated_questions: {
+        Row: {
+          content_hash: string
+          correct_answer: number
+          created_at: string
+          created_by: string | null
+          difficulty: string
+          explanation: string | null
+          id: string
+          options: Json
+          question_text: string
+          subject_id: string | null
+          topic: string | null
+        }
+        Insert: {
+          content_hash: string
+          correct_answer: number
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          options: Json
+          question_text: string
+          subject_id?: string | null
+          topic?: string | null
+        }
+        Update: {
+          content_hash?: string
+          correct_answer?: number
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          question_text?: string
+          subject_id?: string | null
+          topic?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_questions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       practice_answers: {
         Row: {
           answered_at: string
@@ -598,6 +648,38 @@ export type Database = {
             columns: ["topic_id"]
             isOneToOne: false
             referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_question_history: {
+        Row: {
+          id: string
+          question_id: string
+          seen_at: string
+          subject_id: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          question_id: string
+          seen_at?: string
+          subject_id?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          question_id?: string
+          seen_at?: string
+          subject_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_question_history_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "generated_questions"
             referencedColumns: ["id"]
           },
         ]
