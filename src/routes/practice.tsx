@@ -47,6 +47,9 @@ function PracticePage() {
   const [answers, setAnswers] = useState<Array<{ questionId: string; selected: number; correct: boolean; note?: string }>>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState(10);
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
   const [userNotes, setUserNotes] = useState<Record<string, string>>({});
   const [sessionStartedAt, setSessionStartedAt] = useState<number | null>(null);
 
