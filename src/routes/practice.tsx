@@ -232,13 +232,47 @@ function PracticePage() {
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium mb-2">Difficulty</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setDifficulty(d)}
+                        className={`rounded-xl px-2 py-2 text-sm font-medium capitalize transition-all ${
+                          difficulty === d
+                            ? "gradient-primary text-primary-foreground"
+                            : "border border-border hover:bg-muted"
+                        }`}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {genError && (
+                  <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-sm text-destructive">
+                    {genError}
+                  </div>
+                )}
+
                 <button
                   onClick={startSession}
-                  disabled={!selectedSubject}
+                  disabled={!selectedSubject || generating}
                   className="w-full flex items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 disabled:opacity-50"
                 >
-                  <Play className="h-4 w-4" />
-                  Start Practice
+                  {generating ? (
+                    <>
+                      <Sparkles className="h-4 w-4 animate-pulse" />
+                      Generating fresh questions...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4" />
+                      Start Practice
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>
