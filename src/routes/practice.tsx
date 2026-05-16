@@ -21,8 +21,10 @@ interface Question {
   correct_answer: number;
   explanation: string | null;
   difficulty: string;
-  topic_id: string;
+  topic?: string;
 }
+
+type Difficulty = "easy" | "medium" | "hard";
 
 interface Subject {
   id: string;
