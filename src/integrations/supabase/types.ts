@@ -14,6 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_challenge_attempts: {
+        Row: {
+          answers: Json
+          challenge_date: string
+          challenge_id: string
+          completed: boolean
+          completed_at: string | null
+          id: string
+          score: number
+          started_at: string
+          time_spent_seconds: number
+          total: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          challenge_date: string
+          challenge_id: string
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          score?: number
+          started_at?: string
+          time_spent_seconds?: number
+          total?: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          challenge_date?: string
+          challenge_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          score?: number
+          started_at?: string
+          time_spent_seconds?: number
+          total?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_challenge_attempts_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_challenges: {
+        Row: {
+          challenge_date: string
+          created_at: string
+          difficulty: string
+          id: string
+          question_ids: string[]
+        }
+        Insert: {
+          challenge_date: string
+          created_at?: string
+          difficulty?: string
+          id?: string
+          question_ids: string[]
+        }
+        Update: {
+          challenge_date?: string
+          created_at?: string
+          difficulty?: string
+          id?: string
+          question_ids?: string[]
+        }
+        Relationships: []
+      }
       generated_questions: {
         Row: {
           content_hash: string
