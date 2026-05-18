@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, BookOpen, Play, BarChart3, User, LogOut, GraduationCap, Sparkles, Users, Calendar } from "lucide-react";
+import { LayoutDashboard, BookOpen, Play, BarChart3, User, LogOut, GraduationCap, Sparkles, Users, Calendar, TrendingUp } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useUnreadGroups } from "@/hooks/use-unread-groups";
 
@@ -11,6 +11,7 @@ const navItems = [
   { to: "/groups", label: "Study Groups", icon: Users },
   { to: "/tutor", label: "AI Tutor", icon: Sparkles },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/challenge-analytics", label: "Challenge Stats", icon: TrendingUp },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 

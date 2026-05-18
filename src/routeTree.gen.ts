@@ -19,6 +19,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DailyChallengeRouteImport } from './routes/daily-challenge'
+import { Route as ChallengeAnalyticsRouteImport } from './routes/challenge-analytics'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GroupsIndexRouteImport } from './routes/groups.index'
@@ -80,6 +81,11 @@ const DailyChallengeRoute = DailyChallengeRouteImport.update({
   path: '/daily-challenge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChallengeAnalyticsRoute = ChallengeAnalyticsRouteImport.update({
+  id: '/challenge-analytics',
+  path: '/challenge-analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -134,6 +140,7 @@ const ApiAiChatRoute = ApiAiChatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
+  '/challenge-analytics': typeof ChallengeAnalyticsRoute
   '/daily-challenge': typeof DailyChallengeRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
+  '/challenge-analytics': typeof ChallengeAnalyticsRoute
   '/daily-challenge': typeof DailyChallengeRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
+  '/challenge-analytics': typeof ChallengeAnalyticsRoute
   '/daily-challenge': typeof DailyChallengeRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/analytics'
+    | '/challenge-analytics'
     | '/daily-challenge'
     | '/dashboard'
     | '/forgot-password'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/analytics'
+    | '/challenge-analytics'
     | '/daily-challenge'
     | '/dashboard'
     | '/forgot-password'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/analytics'
+    | '/challenge-analytics'
     | '/daily-challenge'
     | '/dashboard'
     | '/forgot-password'
@@ -270,6 +282,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
+  ChallengeAnalyticsRoute: typeof ChallengeAnalyticsRoute
   DailyChallengeRoute: typeof DailyChallengeRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -362,6 +375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DailyChallengeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/challenge-analytics': {
+      id: '/challenge-analytics'
+      path: '/challenge-analytics'
+      fullPath: '/challenge-analytics'
+      preLoaderRoute: typeof ChallengeAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/analytics': {
       id: '/analytics'
       path: '/analytics'
@@ -438,6 +458,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
+  ChallengeAnalyticsRoute: ChallengeAnalyticsRoute,
   DailyChallengeRoute: DailyChallengeRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
@@ -460,3 +481,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
