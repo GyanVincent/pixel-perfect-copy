@@ -22,6 +22,7 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GroupsIndexRouteImport } from './routes/groups.index'
 import { Route as GroupsGroupIdRouteImport } from './routes/groups.$groupId'
+import { Route as ApiDailyChallengeRouteImport } from './routes/api/daily-challenge'
 import { Route as ApiAiSaveMessageRouteImport } from './routes/api/ai-save-message'
 import { Route as ApiAiPracticeRouteImport } from './routes/api/ai-practice'
 import { Route as ApiAiMcqRouteImport } from './routes/api/ai-mcq'
@@ -93,6 +94,11 @@ const GroupsGroupIdRoute = GroupsGroupIdRouteImport.update({
   path: '/groups/$groupId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDailyChallengeRoute = ApiDailyChallengeRouteImport.update({
+  id: '/api/daily-challenge',
+  path: '/api/daily-challenge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiSaveMessageRoute = ApiAiSaveMessageRouteImport.update({
   id: '/api/ai-save-message',
   path: '/api/ai-save-message',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/api/ai-mcq': typeof ApiAiMcqRoute
   '/api/ai-practice': typeof ApiAiPracticeRoute
   '/api/ai-save-message': typeof ApiAiSaveMessageRoute
+  '/api/daily-challenge': typeof ApiDailyChallengeRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/groups/': typeof GroupsIndexRoute
 }
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/api/ai-mcq': typeof ApiAiMcqRoute
   '/api/ai-practice': typeof ApiAiPracticeRoute
   '/api/ai-save-message': typeof ApiAiSaveMessageRoute
+  '/api/daily-challenge': typeof ApiDailyChallengeRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/groups': typeof GroupsIndexRoute
 }
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/api/ai-mcq': typeof ApiAiMcqRoute
   '/api/ai-practice': typeof ApiAiPracticeRoute
   '/api/ai-save-message': typeof ApiAiSaveMessageRoute
+  '/api/daily-challenge': typeof ApiDailyChallengeRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/groups/': typeof GroupsIndexRoute
 }
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/api/ai-mcq'
     | '/api/ai-practice'
     | '/api/ai-save-message'
+    | '/api/daily-challenge'
     | '/groups/$groupId'
     | '/groups/'
   fileRoutesByTo: FileRoutesByTo
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/api/ai-mcq'
     | '/api/ai-practice'
     | '/api/ai-save-message'
+    | '/api/daily-challenge'
     | '/groups/$groupId'
     | '/groups'
   id:
@@ -239,6 +250,7 @@ export interface FileRouteTypes {
     | '/api/ai-mcq'
     | '/api/ai-practice'
     | '/api/ai-save-message'
+    | '/api/daily-challenge'
     | '/groups/$groupId'
     | '/groups/'
   fileRoutesById: FileRoutesById
@@ -260,6 +272,7 @@ export interface RootRouteChildren {
   ApiAiMcqRoute: typeof ApiAiMcqRoute
   ApiAiPracticeRoute: typeof ApiAiPracticeRoute
   ApiAiSaveMessageRoute: typeof ApiAiSaveMessageRoute
+  ApiDailyChallengeRoute: typeof ApiDailyChallengeRoute
   GroupsGroupIdRoute: typeof GroupsGroupIdRoute
   GroupsIndexRoute: typeof GroupsIndexRoute
 }
@@ -357,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupsGroupIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/daily-challenge': {
+      id: '/api/daily-challenge'
+      path: '/api/daily-challenge'
+      fullPath: '/api/daily-challenge'
+      preLoaderRoute: typeof ApiDailyChallengeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai-save-message': {
       id: '/api/ai-save-message'
       path: '/api/ai-save-message'
@@ -412,9 +432,19 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiMcqRoute: ApiAiMcqRoute,
   ApiAiPracticeRoute: ApiAiPracticeRoute,
   ApiAiSaveMessageRoute: ApiAiSaveMessageRoute,
+  ApiDailyChallengeRoute: ApiDailyChallengeRoute,
   GroupsGroupIdRoute: GroupsGroupIdRoute,
   GroupsIndexRoute: GroupsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
