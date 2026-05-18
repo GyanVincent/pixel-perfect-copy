@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, BookOpen, Play, BarChart3, User, LogOut, GraduationCap, Sparkles, Users, Calendar } from "lucide-react";
+import { LayoutDashboard, BookOpen, Play, BarChart3, User, LogOut, GraduationCap, Sparkles, Users, Calendar, TrendingUp } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useUnreadGroups } from "@/hooks/use-unread-groups";
 
