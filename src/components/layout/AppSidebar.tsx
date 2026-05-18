@@ -11,6 +11,7 @@ const navItems = [
   { to: "/groups", label: "Study Groups", icon: Users },
   { to: "/tutor", label: "AI Tutor", icon: Sparkles },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/challenge-analytics", label: "Challenge Stats", icon: TrendingUp },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
