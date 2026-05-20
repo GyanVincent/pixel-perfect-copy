@@ -160,7 +160,7 @@ function ProfilePage() {
           university: university.trim() || null,
           department: department.trim() || null,
           avatar_url: nextAvatarUrl,
-        })
+        } as never)
         .eq("user_id", user.id);
       if (dbErr) throw dbErr;
 
