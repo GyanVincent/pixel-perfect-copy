@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Users, MessageSquare, BookMarked, Trophy, Send, Hash, Copy, Check, ArrowLeft, ExternalLink, Trash2, Play, Plus, Search, Paperclip, FileText, FileImage, FileAudio, FileVideo, File as FileIcon, Download, Loader2 } from "lucide-react";
 import { markGroupRead } from "@/hooks/use-unread-groups";
+import { UserAvatar } from "@/components/UserAvatar";
+import { displayName } from "@/lib/profile-utils";
 
 export const Route = createFileRoute("/groups/$groupId")({
   component: GroupDetailPage,
@@ -541,13 +543,12 @@ function GroupDetailPage() {
                       className={`flex w-full min-w-0 gap-2 md:gap-3 ${isMe ? "justify-end" : "justify-start"}`}
                     >
                       {!isMe && (
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent text-xs font-semibold overflow-hidden">
-                          {m.author_avatar ? (
-                            <img src={m.author_avatar} alt={m.author_name || "Member"} className="h-full w-full object-cover" />
-                          ) : (
-                            (m.author_name || "M").charAt(0).toUpperCase()
-                          )}
-                        </div>
+                        <UserAvatar
+                          name={m.author_name}
+                          avatarUrl={m.author_avatar}
+                          className="h-8 w-8"
+                          textClassName="text-xs"
+                        />
                       )}
                       <div className={`max-w-[75%] min-w-0 flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                         <div className="flex items-center gap-2 mb-0.5 text-xs text-muted-foreground min-w-0">
@@ -745,13 +746,12 @@ function GroupDetailPage() {
                       <div className="flex h-8 w-8 items-center justify-center font-semibold text-sm">
                         {medal || `#${idx + 1}`}
                       </div>
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold overflow-hidden">
-                        {row.avatar_url ? (
-                          <img src={row.avatar_url} alt={row.full_name} className="h-full w-full object-cover" />
-                        ) : (
-                          row.full_name.charAt(0).toUpperCase()
-                        )}
-                      </div>
+                      <UserAvatar
+                        name={row.full_name}
+                        avatarUrl={row.avatar_url}
+                        className="h-9 w-9"
+                        textClassName="text-sm"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{isMe ? `${row.full_name} (you)` : row.full_name}</p>
                         <p className="text-xs text-muted-foreground">{row.total_questions} questions answered</p>
@@ -776,32 +776,33 @@ function GroupDetailPage() {
                 const isMemberOwner = m.user_id === group.owner_id;
                 const canManage = isOwner && !isMemberOwner;
                 return (
-                  <div key={m.user_id} className="flex flex-wrap items-center gap-3 rounded-xl px-3 py-2 hover:bg-muted/30">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-accent text-sm font-semibold overflow-hidden">
-                      {m.avatar_url ? (
-                        <img src={m.avatar_url} alt={m.full_name || "Member"} className="h-full w-full object-cover" />
-                      ) : (
-                        (m.full_name || "M").charAt(0).toUpperCase()
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-[150px]">
-                      <p className="font-medium truncate">{m.full_name}{isMe && " (you)"}</p>
+                  <div key={m.user_id} className="flex flex-wrap items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-muted/30">
+                    <UserAvatar
+                      name={m.full_name}
+                      avatarUrl={m.avatar_url}
+                      className="h-9 w-9"
+                      textClassName="text-sm"
+                    />
+                    <div className="flex-1 min-w-[140px]">
+                      <p className="font-medium truncate">
+                        {displayName(m.full_name)}{isMe && " (you)"}
+                      </p>
                       <p className="text-xs text-muted-foreground">Joined {new Date(m.joined_at).toLocaleDateString()}</p>
                     </div>
                     {isMemberOwner && (
-                      <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">Owner</span>
+                      <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full shrink-0">Owner</span>
                     )}
                     {canManage && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-1 sm:mt-0">
                         <button
                           onClick={() => transferOwnership(m.user_id, m.full_name || "this member")}
-                          className="text-xs rounded-lg border border-border px-2.5 py-1 hover:bg-muted"
+                          className="text-xs rounded-lg border border-border px-2.5 py-1.5 hover:bg-muted whitespace-nowrap"
                         >
                           Make owner
                         </button>
                         <button
                           onClick={() => removeMember(m.user_id, m.full_name || "this member")}
-                          className="text-xs rounded-lg border border-destructive/30 text-destructive px-2.5 py-1 hover:bg-destructive/10"
+                          className="text-xs rounded-lg border border-destructive/30 text-destructive px-2.5 py-1.5 hover:bg-destructive/10 whitespace-nowrap"
                         >
                           Remove
                         </button>
